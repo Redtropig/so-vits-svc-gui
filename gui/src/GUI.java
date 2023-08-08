@@ -13,7 +13,7 @@ public class GUI extends JFrame {
     private static final String ICON_PATH = "./gui/data/img/GUI-Icon.png";
     private static final String SLICING_DIRECTORY_DEFAULT = "./so-vits-svc-4.1-Stable/dataset_raw";
     private static final String[] VOCAL_FILE_EXTENSIONS_ACCEPTED = {"wav"};
-    private static final String VOCAL_FILE_EXTENSIONS_DESCRIPTION = "Wave File(*.wav)";
+    private static final String VOCAL_FILE_EXTENSIONS_DESCRIPTION = "Wave File(s)(*.wav)";
     private static final String DEFAULT_VOICE_NAME = "default-voice";
 
     private JPanel mainPanel;
@@ -93,31 +93,35 @@ public class GUI extends JFrame {
                 return;
             }
 
-            // Command construction
-            List<String> command = new ArrayList<>();
-            command.add(ExecutionAgent.PYTHON_EXE_PATH);
-            command.add(ExecutionAgent.SLICER_PATH);
-            command.addAll(Arrays.stream(vocalAudioFiles).map(File::getPath).toList());
-
             // user input voice name
             String voiceName = JOptionPane.showInputDialog(datasetPrepPanel,
-                                                    "Set voice name:",
-                                                        "Voice Name",
-                                                            JOptionPane.QUESTION_MESSAGE).trim();
+                    "Set voice name:",
+                    "Voice Name",
+                    JOptionPane.QUESTION_MESSAGE).trim();
             if (voiceName.isEmpty()) {  // handle empty Name
                 voiceName = DEFAULT_VOICE_NAME;
             }
-            command.add("--out");
-            command.add(sliceOutDirFld.getText() + "/" + voiceName);
 
-            // disable slicer btn during slicing
-            vocalSlicerBtn.setEnabled(false);
+            // slice each vocal file
+            for (File vocalFile : vocalAudioFiles) {
+                // Command construction
+                List<String> command = new ArrayList<>();
+                command.add(ExecutionAgent.PYTHON_EXE_PATH);
+                command.add(ExecutionAgent.SLICER_PATH);
+                command.add(vocalFile.getPath());
+                command.add("--out");
+                command.add(sliceOutDirFld.getText() + "/" + voiceName);
 
-            // schedule a task
-            executionAgent.executeLater(command, Optional.of(() -> {
-                System.out.println("[INFO] Vocal slicing completed.");
-                vocalSlicerBtn.setEnabled(true);
-            }));
+                // disable slicer btn during slicing
+                vocalSlicerBtn.setEnabled(false);
+
+                // schedule a task
+                executionAgent.executeLater(command, Optional.of(() -> {
+                    System.out.println("[INFO] Slicing completed: " + vocalFile.getName());
+                    vocalSlicerBtn.setEnabled(true);
+                }));
+            }
+
             // execute ASAP
             executionAgent.invokeExecution();
         });
