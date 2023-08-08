@@ -5,25 +5,25 @@ import models.ExecutionAgent;
 import java.io.File;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.util.Arrays;
-import java.util.Locale;
+import java.util.*;
 
 public class GUI extends JFrame {
 
     private static final String PROGRAM_TITLE = "SoftVC VITS Singing Voice Conversion GUI";
     private static final String ICON_PATH = "./gui/data/img/GUI-Icon.png";
     private static final String SLICING_DIRECTORY_DEFAULT = "./so-vits-svc-4.1-Stable/dataset_raw";
-    private static final String[] VOCAL_FILE_EXTENSION_ACCEPTED = {"wav"};
-    private static final String VOCAL_FILE_EXTENSION_DESCRIPTION = "Wave File(*.wav)";
+    private static final String[] VOCAL_FILE_EXTENSIONS_ACCEPTED = {"wav"};
+    private static final String VOCAL_FILE_EXTENSIONS_DESCRIPTION = "Wave File(*.wav)";
+    private static final String DEFAULT_VOICE_NAME = "default-voice";
 
     private JPanel mainPanel;
     private JPanel datasetPrepPanel;
     private JPanel consolePanel;
     private JTextArea consoleArea;
-    private JTextField vocalInputPathField;
-    private JButton vocalAudioChooserBtn;
-    private JTextField sliceOutputDirectoryField;
-    private JButton vocalAudioSlicerBtn;
+    private JTextField vocalInPathFld;
+    private JButton vocalChooserBtn;
+    private JTextField sliceOutDirFld;
+    private JButton vocalSlicerBtn;
 
     private final ExecutionAgent executionAgent;
     private File[] vocalAudioFiles;
@@ -59,34 +59,68 @@ public class GUI extends JFrame {
         pack();
     }
 
+
     private void createUIComponents() {
         createDatasetPrepArea();
     }
 
+
     private void createDatasetPrepArea() {
 
-        vocalAudioChooserBtn.addActionListener(e -> {
-            JFileChooser vocalAudioFileChooser = new JFileChooser();
-            vocalAudioFileChooser.setAcceptAllFileFilterUsed(false);
-            vocalAudioFileChooser.setMultiSelectionEnabled(true);
-            vocalAudioFileChooser.setFileFilter(new FileNameExtensionFilter(VOCAL_FILE_EXTENSION_DESCRIPTION, VOCAL_FILE_EXTENSION_ACCEPTED));
+        // Vocal File Chooser
+        vocalChooserBtn.addActionListener(e -> {
+            JFileChooser vocalFileChooser = new JFileChooser();
+            vocalFileChooser.setAcceptAllFileFilterUsed(false);
+            vocalFileChooser.setMultiSelectionEnabled(true);
+            vocalFileChooser.setFileFilter(new FileNameExtensionFilter(VOCAL_FILE_EXTENSIONS_DESCRIPTION,
+                                                                        VOCAL_FILE_EXTENSIONS_ACCEPTED));
+            // Choose vocal file(s)
+            if (vocalFileChooser.showOpenDialog(datasetPrepPanel) == JFileChooser.APPROVE_OPTION) {
+                vocalAudioFiles = vocalFileChooser.getSelectedFiles();
 
-            if (vocalAudioFileChooser.showOpenDialog(datasetPrepPanel) == JFileChooser.APPROVE_OPTION) {
-                vocalAudioFiles = vocalAudioFileChooser.getSelectedFiles();
-
-                // Update file path text field
-                vocalInputPathField.setText(String.join(";", Arrays.stream(vocalAudioFiles).map(File::getName).toList()));
+                // Update file-path text field
+                vocalInPathFld.setText(String.join(";",
+                                            Arrays.stream(vocalAudioFiles).map(File::getName).toList()));
             }
         });
 
-        sliceOutputDirectoryField.setText(SLICING_DIRECTORY_DEFAULT);
+        // Vocal File Slicer
+        sliceOutDirFld.setText(SLICING_DIRECTORY_DEFAULT);
+        vocalSlicerBtn.addActionListener(e -> {
+            // No selected vocal file
+            if (vocalAudioFiles == null || vocalAudioFiles.length == 0) {
+                System.err.println("[!] Please select at least 1 vocal file.");
+                return;
+            }
 
-        vocalAudioSlicerBtn.addActionListener(e -> {
-            // TODO
-            JOptionPane.showInputDialog(datasetPrepPanel, "Set voice name:", "Voice Name", JOptionPane.QUESTION_MESSAGE);
+            // Command construction
+            List<String> command = new ArrayList<>();
+            command.add(ExecutionAgent.PYTHON_EXE_PATH);
+            command.add(ExecutionAgent.SLICER_PATH);
+            command.addAll(Arrays.stream(vocalAudioFiles).map(File::getPath).toList());
+
+            // user input voice name
+            String voiceName = JOptionPane.showInputDialog(datasetPrepPanel,
+                                                    "Set voice name:",
+                                                        "Voice Name",
+                                                            JOptionPane.QUESTION_MESSAGE).trim();
+            if (voiceName.isEmpty()) {  // handle empty Name
+                voiceName = DEFAULT_VOICE_NAME;
+            }
+            command.add("--out");
+            command.add(sliceOutDirFld.getText() + "/" + voiceName);
+
+            // disable slicer btn during slicing
+            vocalSlicerBtn.setEnabled(false);
+
+            // schedule a task
+            executionAgent.executeLater(command, Optional.of(() -> {
+                System.out.println("[INFO] Vocal slicing completed.");
+                vocalSlicerBtn.setEnabled(true);
+            }));
+            // execute ASAP
+            executionAgent.invokeExecution();
         });
-
-
     }
 
 

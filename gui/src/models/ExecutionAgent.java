@@ -2,15 +2,19 @@ package models;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Execution Agent
- * @responsibility Execute commands in a new Thread.
+ * @responsibility Execute sequence of commands in a new Thread.
  * @design SINGLETON
  */
 public class ExecutionAgent {
+    public static final String PYTHON_EXE_PATH = "./workenv/python.exe";
+    public static final String SLICER_PATH = "./audio-slicer-main/slicer2.py";
+
     private static ExecutionAgent executionAgent;
 
     private final Queue<Runnable> taskQueue;
@@ -32,12 +36,15 @@ public class ExecutionAgent {
      * @param command command with its arguments.
      * @return true -> task scheduled, false otherwise.
      */
-    public boolean executeLater(List<String> command) {
+    public boolean executeLater(List<String> command, Optional<Runnable> afterExecution) {
         ProcessBuilder processBuilder = new ProcessBuilder(command).inheritIO();
 
+        // Schedule in Queue
         return taskQueue.offer(() -> {
             try {
                 processBuilder.start();
+                // after-task execution
+                afterExecution.ifPresent(Runnable::run);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

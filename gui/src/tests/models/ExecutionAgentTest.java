@@ -5,6 +5,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 class ExecutionAgentTest {
     private ExecutionAgent executionAgent;
@@ -27,8 +29,37 @@ class ExecutionAgentTest {
     void executeLaterScheduleTest() {
         String[] command = {"ping", "127.0.0.1"};
 
-        Assertions.assertTrue(executionAgent.executeLater(Arrays.stream(command).toList()));
-        Assertions.assertTrue(executionAgent.executeLater(Arrays.stream(command).toList()));
+        Assertions.assertTrue(executionAgent.executeLater(Arrays.stream(command).toList(), Optional.empty()));
+        Assertions.assertTrue(executionAgent.executeLater(Arrays.stream(command).toList(), Optional.empty()));
+    }
+
+
+    /**
+     * This is a UNSTABLE test that may fail on poor CPU performance allocated to this process
+     */
+    @Test
+    void invokeExecutionTest() throws InterruptedException {
+        String[] command = {"ping", "127.0.0.1"};
+        AtomicBoolean valid1 = new AtomicBoolean(false);
+        AtomicBoolean valid2 = new AtomicBoolean(false);
+
+        executionAgent.executeLater(Arrays.stream(command).toList(), Optional.of(() -> valid1.set(true)));
+        executionAgent.executeLater(Arrays.stream(command).toList(), Optional.of(() -> valid2.set(true)));
+
+        // wait for no execution occur
+        Thread.sleep(100);
+
+        Assertions.assertFalse(valid1.get());
+        Assertions.assertFalse(valid2.get());
+
+        // invoke execution
+        executionAgent.invokeExecution();
+
+        // wait for execution done
+        Thread.sleep(100);
+
+        Assertions.assertTrue(valid1.get());
+        Assertions.assertTrue(valid2.get());
     }
 
 }
