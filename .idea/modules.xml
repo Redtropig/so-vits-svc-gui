@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/gui/gui.iml" filepath="$PROJECT_DIR$/gui/gui.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/so-vits-svc-4.1-Stable-GUI.iml" filepath="$PROJECT_DIR$/.idea/so-vits-svc-4.1-Stable-GUI.iml" />
     </modules>
   </component>
 </project>
