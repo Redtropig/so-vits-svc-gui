@@ -5,7 +5,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 class ExecutionAgentTest {
@@ -29,8 +28,8 @@ class ExecutionAgentTest {
     void executeLaterScheduleTest() {
         String[] command = {"ping", "127.0.0.1"};
 
-        Assertions.assertTrue(executionAgent.executeLater(Arrays.stream(command).toList(), Optional.empty()));
-        Assertions.assertTrue(executionAgent.executeLater(Arrays.stream(command).toList(), Optional.empty()));
+        Assertions.assertTrue(executionAgent.executeLater(Arrays.stream(command).toList(), null));
+        Assertions.assertTrue(executionAgent.executeLater(Arrays.stream(command).toList(), null));
     }
 
 
@@ -39,12 +38,12 @@ class ExecutionAgentTest {
      */
     @Test
     void invokeExecutionTest() throws InterruptedException {
-        String[] command = {"ping", "127.0.0.1"};
+        String[] command = {"help"};
         AtomicBoolean valid1 = new AtomicBoolean(false);
         AtomicBoolean valid2 = new AtomicBoolean(false);
 
-        executionAgent.executeLater(Arrays.stream(command).toList(), Optional.of(() -> valid1.set(true)));
-        executionAgent.executeLater(Arrays.stream(command).toList(), Optional.of(() -> valid2.set(true)));
+        executionAgent.executeLater(Arrays.stream(command).toList(), () -> valid1.set(true));
+        executionAgent.executeLater(Arrays.stream(command).toList(), () -> valid2.set(true));
 
         // wait for no execution occur
         Thread.sleep(100);

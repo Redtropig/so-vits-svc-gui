@@ -2,7 +2,6 @@ package models;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -12,8 +11,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * @design SINGLETON
  */
 public class ExecutionAgent {
-    public static final String PYTHON_EXE_PATH = "./workenv/python.exe";
-    public static final String SLICER_PATH = "./audio-slicer-main/slicer2.py";
+    public static final String PYTHON_EXE_PATH = ".\\workenv\\python.exe";
+    public static final String SLICER_PATH = ".\\audio-slicer-main\\slicer2.py";
 
     private static ExecutionAgent executionAgent;
 
@@ -32,19 +31,25 @@ public class ExecutionAgent {
     }
 
     /**
-     * Schedule a task to execute the command.
-     * @param command command with its arguments.
+     * Schedule a task to execute the command and then its afterExecution.
+     * if afterExecution == null, the same effect as afterExecution is ()->{}.
+     * @param command NON-EMPTY command with its arguments.
+     * @param afterExecution to run AFTER the command execution
      * @return true -> task scheduled, false otherwise.
      */
-    public boolean executeLater(List<String> command, Optional<Runnable> afterExecution) {
+    public boolean executeLater(List<String> command, Runnable afterExecution) {
+        // check if command is empty
+        if (command.isEmpty()) {
+            return false;
+        }
+
         ProcessBuilder processBuilder = new ProcessBuilder(command).inheritIO();
 
         // Schedule in Queue
         return taskQueue.offer(() -> {
             try {
-                processBuilder.start();
-                // after-task execution
-                afterExecution.ifPresent(Runnable::run);
+                // Run the process, then do after-task execution
+                processBuilder.start().onExit().thenRun(afterExecution == null ? ()->{} : afterExecution);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
