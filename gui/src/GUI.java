@@ -2,6 +2,7 @@ import models.ExecutionAgent;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import java.awt.*;
 import java.io.File;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -15,19 +16,21 @@ public class GUI extends JFrame {
     private static final String PROGRAM_TITLE = "SoftVC VITS Singing Voice Conversion GUI";
     private static final String ICON_PATH = ".\\gui\\data\\img\\GUI-Icon.png";
     private static final String SLICING_DIRECTORY_DEFAULT = ".\\so-vits-svc-4.1-Stable\\dataset_raw";
+    private static final int SLICING_MIN_INTERVAL_DEFAULT = 100; // ms
     private static final String[] VOCAL_FILE_EXTENSIONS_ACCEPTED = {"wav"};
     private static final String VOCAL_FILE_EXTENSIONS_DESCRIPTION = "Wave File(s)(*.wav)";
     private static final String VOICE_NAME_DEFAULT = "default-voice";
+    private static final int CONSOLE_LINE_COUNT_MAX = 512;
 
     private JPanel mainPanel;
     private JPanel datasetPrepPanel;
-    private JPanel consolePanel;
     private JTextArea consoleArea;
     private JTextField vocalInPathFld;
     private JButton vocalChooserBtn;
     private JTextField sliceOutDirFld;
     private JButton vocalSlicerBtn;
     private JButton clearSliceOutDirBtn;
+    private JScrollPane consolePanel;
 
     private final ExecutionAgent executionAgent;
     private File[] vocalAudioFiles;
@@ -66,29 +69,30 @@ public class GUI extends JFrame {
 
     private void createUIComponents() {
         createDatasetPrepArea();
+        createConsoleArea();
     }
 
 
     private void createDatasetPrepArea() {
 
-        // Vocal File Chooser
+        /* Vocal File Chooser */
         vocalChooserBtn.addActionListener(e -> {
             JFileChooser vocalFileChooser = new JFileChooser();
             vocalFileChooser.setAcceptAllFileFilterUsed(false);
             vocalFileChooser.setMultiSelectionEnabled(true);
             vocalFileChooser.setFileFilter(new FileNameExtensionFilter(VOCAL_FILE_EXTENSIONS_DESCRIPTION,
-                                                                        VOCAL_FILE_EXTENSIONS_ACCEPTED));
+                    VOCAL_FILE_EXTENSIONS_ACCEPTED));
+
             // Choose vocal file(s)
             if (vocalFileChooser.showOpenDialog(datasetPrepPanel) == JFileChooser.APPROVE_OPTION) {
                 vocalAudioFiles = vocalFileChooser.getSelectedFiles();
 
                 // Update file-path text field
-                vocalInPathFld.setText(String.join(";",
-                                            Arrays.stream(vocalAudioFiles).map(File::getName).toList()));
+                vocalInPathFld.setText(String.join(";", Arrays.stream(vocalAudioFiles).map(File::getName).toList()));
             }
         });
 
-        // Vocal File Slicer
+        /* Vocal File Slicer */
         sliceOutDirFld.setText(SLICING_DIRECTORY_DEFAULT);
         vocalSlicerBtn.addActionListener(e -> {
             // No selected vocal file
@@ -121,6 +125,8 @@ public class GUI extends JFrame {
                 command.add(vocalFile.getPath());
                 command.add("--out");
                 command.add(sliceOutDirFld.getText() + "/" + voiceName);
+                command.add("--min_interval");
+                command.add(String.valueOf(SLICING_MIN_INTERVAL_DEFAULT));
 
                 // schedule a task
                 int finalI = i;
@@ -137,19 +143,32 @@ public class GUI extends JFrame {
             executionAgent.invokeExecution();
         });
 
-        // Slice Out Dir Cleaner
+        /* Slice Out Dir Cleaner */
         clearSliceOutDirBtn.addActionListener(e -> {
             File sliceOutDir = new File(SLICING_DIRECTORY_DEFAULT);
             String[] command = {"cmd", "/c", "rmdir", "/s", "/q", sliceOutDir.getAbsolutePath()};
 
             // schedule a task
             executionAgent.executeLater(Arrays.stream(command).toList(), () -> {
-                assert sliceOutDir.mkdir();
+                sliceOutDir.mkdir();
                 System.out.println("[INFO] Slice Output Directory Cleared.");
             });
 
             // execute ASAP
             executionAgent.invokeExecution();
+        });
+    }
+
+    private void createConsoleArea() {
+        JScrollBar verticalScrollBar = consolePanel.getVerticalScrollBar();
+
+        /* Console Vertical Scroll Bar */
+        verticalScrollBar.addAdjustmentListener(e -> {
+            // limit the maximum line count of console history
+            long exceededLineCount = consoleArea.getLineCount() - CONSOLE_LINE_COUNT_MAX;
+            if (exceededLineCount > 0) {
+                consoleArea.setText(String.join("\n", consoleArea.getText().lines().skip(exceededLineCount).toList()) + '\n');
+            }
         });
     }
 
@@ -170,6 +189,10 @@ public class GUI extends JFrame {
      */
     private void updateConsole(String output) {
         consoleArea.append(output);
+
+        // console auto scroll to bottom
+        JScrollBar verticalScrollBar = consolePanel.getVerticalScrollBar();
+        EventQueue.invokeLater(() -> verticalScrollBar.setValue(verticalScrollBar.getMaximum()));
     }
 
 }
