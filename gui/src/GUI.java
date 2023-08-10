@@ -15,12 +15,31 @@ public class GUI extends JFrame {
 
     private static final String PROGRAM_TITLE = "SoftVC VITS Singing Voice Conversion GUI";
     private static final String ICON_PATH = ".\\gui\\data\\img\\GUI-Icon.png";
-    private static final String SLICING_DIRECTORY_DEFAULT = ".\\so-vits-svc-4.1-Stable\\dataset_raw";
+    private static final String SLICING_OUT_DIR_DEFAULT = ".\\so-vits-svc-4.1-Stable\\dataset_raw";
+    private static final String PREPROCESS_OUT_DIR_DEFAULT = ".\\so-vits-svc-4.1-Stable\\dataset\\44k";
     private static final int SLICING_MIN_INTERVAL_DEFAULT = 100; // ms
     private static final String[] VOCAL_FILE_EXTENSIONS_ACCEPTED = {"wav"};
     private static final String VOCAL_FILE_EXTENSIONS_DESCRIPTION = "Wave File(s)(*.wav)";
     private static final String VOICE_NAME_DEFAULT = "default-voice";
     private static final int CONSOLE_LINE_COUNT_MAX = 512;
+    private static final String[] SPEECH_ENCODERS = {
+            "vec768l12",
+            "vec256l9",
+            "hubertsoft",
+            "whisper-ppg",
+            "cnhubertlarge",
+            "dphubert",
+            "whisper-ppg-large",
+            "wavlmbase+"
+    };
+    private static final String[] F0_PREDICTORS = {
+            "crepe",
+            "dio",
+            "pm",
+            "harvest",
+            "rmvpe",
+            "fcpe",
+    };
 
     private JPanel mainPanel;
     private JPanel datasetPrepPanel;
@@ -31,6 +50,12 @@ public class GUI extends JFrame {
     private JButton vocalSlicerBtn;
     private JButton clearSliceOutDirBtn;
     private JScrollPane consolePanel;
+    private JComboBox<String> speechEncoderCbBx;
+    private JComboBox<String> f0PredictorCbBx;
+    private JCheckBox loudnessEmbedCkBx;
+    private JButton preprocessBtn;
+    private JTextField preprocessOutDirFld;
+    private JButton clearPreprocessOutDirBtn;
 
     private final ExecutionAgent executionAgent;
     private File[] vocalAudioFiles;
@@ -66,12 +91,11 @@ public class GUI extends JFrame {
         pack();
     }
 
-
     private void createUIComponents() {
         createDatasetPrepArea();
+        createPreprocessArea();
         createConsoleArea();
     }
-
 
     private void createDatasetPrepArea() {
 
@@ -93,7 +117,7 @@ public class GUI extends JFrame {
         });
 
         /* Vocal File Slicer */
-        sliceOutDirFld.setText(SLICING_DIRECTORY_DEFAULT);
+        sliceOutDirFld.setText(SLICING_OUT_DIR_DEFAULT);
         vocalSlicerBtn.addActionListener(e -> {
             // No selected vocal file
             if (vocalAudioFiles == null || vocalAudioFiles.length == 0) {
@@ -110,7 +134,7 @@ public class GUI extends JFrame {
                 voiceName = VOICE_NAME_DEFAULT;
             }
 
-            // disable slicer btn during slicing
+            // disable related interactions before slicing
             vocalSlicerBtn.setEnabled(false);
             clearSliceOutDirBtn.setEnabled(false);
 
@@ -119,20 +143,22 @@ public class GUI extends JFrame {
                 File vocalFile = vocalAudioFiles[i];
 
                 // Command construction
-                List<String> command = new ArrayList<>();
-                command.add(ExecutionAgent.PYTHON_EXE_PATH);
-                command.add(ExecutionAgent.SLICER_PATH);
-                command.add(vocalFile.getPath());
-                command.add("--out");
-                command.add(sliceOutDirFld.getText() + "/" + voiceName);
-                command.add("--min_interval");
-                command.add(String.valueOf(SLICING_MIN_INTERVAL_DEFAULT));
+                String[] command = {
+                        ExecutionAgent.PYTHON_EXE_PATH,
+                        ExecutionAgent.SLICER_PATH,
+                        vocalFile.getPath(),
+                        "--out",
+                        sliceOutDirFld.getText() + "/" + voiceName,
+                        "--min_interval",
+                        String.valueOf(SLICING_MIN_INTERVAL_DEFAULT)
+                };
 
                 // schedule a task
                 int finalI = i;
-                executionAgent.executeLater(command, () -> {
+                executionAgent.executeLater(command, null, () -> {
                     System.out.println("[INFO] Slicing completed: " + vocalFile.getName());
                     if (finalI == 0) {
+                        // enable related interactions after batch execution
                         vocalSlicerBtn.setEnabled(true);
                         clearSliceOutDirBtn.setEnabled(true);
                     }
@@ -144,19 +170,50 @@ public class GUI extends JFrame {
         });
 
         /* Slice Out Dir Cleaner */
-        clearSliceOutDirBtn.addActionListener(e -> {
-            File sliceOutDir = new File(SLICING_DIRECTORY_DEFAULT);
-            String[] command = {"cmd", "/c", "rmdir", "/s", "/q", sliceOutDir.getAbsolutePath()};
+        clearSliceOutDirBtn.addActionListener(e -> emptyDirectory(new File(SLICING_OUT_DIR_DEFAULT)));
+    }
 
-            // schedule a task
-            executionAgent.executeLater(Arrays.stream(command).toList(), () -> {
-                sliceOutDir.mkdir();
-                System.out.println("[INFO] Slice Output Directory Cleared.");
-            });
+    private void createPreprocessArea() {
 
-            // execute ASAP
-            executionAgent.invokeExecution();
+        /* Speech Encoder */
+        // add entries
+        for (String encoder : SPEECH_ENCODERS) {
+            speechEncoderCbBx.addItem(encoder);
+        }
+
+        /* F0 Predictor */
+        // add entries
+        for (String predictor : F0_PREDICTORS) {
+            f0PredictorCbBx.addItem(predictor);
+        }
+
+        /* Loudness Embedding */
+        loudnessEmbedCkBx.addActionListener(e -> {
+            if (loudnessEmbedCkBx.isSelected()) {
+                speechEncoderCbBx.setEnabled(false);
+                speechEncoderCbBx.setSelectedIndex(0);
+            } else {
+                speechEncoderCbBx.setEnabled(true);
+            }
         });
+
+        /* Preprocessor */
+        preprocessOutDirFld.setText(PREPROCESS_OUT_DIR_DEFAULT);
+        preprocessBtn.addActionListener(e -> {
+
+            // disable related interactions before slicing
+            preprocessBtn.setEnabled(false);
+            clearPreprocessOutDirBtn.setEnabled(false);
+
+            resampleAudio();
+            // TODO
+
+            // enable related interactions after batch execution
+        });
+
+        /* Preprocess Out Dir Cleaner */
+        clearPreprocessOutDirBtn.addActionListener(e -> emptyDirectory(new File(PREPROCESS_OUT_DIR_DEFAULT)));
+
     }
 
     private void createConsoleArea() {
@@ -172,6 +229,53 @@ public class GUI extends JFrame {
         });
     }
 
+    /**
+     * Empty a directory.
+     * @param directory directory to be emptied
+     * @dependency Windows OS
+     */
+    private void emptyDirectory(File directory) {
+        if (directory.isDirectory()) {
+            String[] command = {"cmd", "/c", "rmdir", "/s", "/q", directory.getAbsolutePath()};
+
+            // schedule a task
+            executionAgent.executeLater(command, null, () -> {
+                directory.mkdir();
+                System.out.println("[INFO] \"" + directory.getName() + "\" Directory Cleared.");
+            });
+
+            // execute ASAP
+            executionAgent.invokeExecution();
+        }
+    }
+
+    /**
+     * Resample audios @src -> @dest, to 44100Hz mono.
+     * @src .\dataset_raw
+     * @dest .\dataset\44k
+     */
+    private void resampleAudio() {
+        String[] command = {
+                ExecutionAgent.PYTHON_EXE_PATH,
+                ExecutionAgent.RESAMPLER,
+        };
+
+        executionAgent.executeLater(command,
+                ExecutionAgent.SO_VITS_SVC_DIR,
+                () -> System.out.println("[INFO] Resampled to 44100Hz mono.")
+        );
+        executionAgent.invokeExecution();
+    }
+
+    /**
+     * Split the dataset into training and validation sets, and generate configuration files.
+     */
+    private void splitDatasetAndGenerateConfig() {
+        List<String> command = new ArrayList<>();
+        command.add(ExecutionAgent.PYTHON_EXE_PATH);
+        command.add("");
+        // TODO
+    }
 
     /**
      * Redirect System output & error stream to designated PrintStream(s).
