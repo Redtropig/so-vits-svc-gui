@@ -6,6 +6,7 @@ import java.awt.*;
 import java.io.File;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -22,6 +23,7 @@ public class GUI extends JFrame {
     private static final String VOCAL_FILE_EXTENSIONS_DESCRIPTION = "Wave File(s)(*.wav)";
     private static final String VOICE_NAME_DEFAULT = "default-voice";
     private static final int CONSOLE_LINE_COUNT_MAX = 512;
+    private static final String SPEECH_ENCODER_DEFAULT = "vec768l12";
     private static final String[] SPEECH_ENCODERS = {
             "vec768l12",
             "vec256l9",
@@ -32,6 +34,7 @@ public class GUI extends JFrame {
             "whisper-ppg-large",
             "wavlmbase+"
     };
+    private static final String F0_PREDICTOR_DEFAULT = "rmvpe";
     private static final String[] F0_PREDICTORS = {
             "crepe",
             "dio",
@@ -40,6 +43,8 @@ public class GUI extends JFrame {
             "rmvpe",
             "fcpe",
     };
+
+
 
     private JPanel mainPanel;
     private JPanel datasetPrepPanel;
@@ -71,7 +76,7 @@ public class GUI extends JFrame {
                 updateConsole(String.valueOf((char)b));
             }
         };
-        PrintStream printGUI = new PrintStream(outGUI, true);
+        PrintStream printGUI = new PrintStream(outGUI, true, StandardCharsets.UTF_8);
         redirectSystemOutErrStream(printGUI, printGUI);
 
         /* UI Frame Settings */
@@ -144,8 +149,8 @@ public class GUI extends JFrame {
 
                 // Command construction
                 String[] command = {
-                        ExecutionAgent.PYTHON_EXE_PATH,
-                        ExecutionAgent.SLICER_PATH,
+                        ExecutionAgent.PYTHON_EXE.getAbsolutePath(),
+                        ExecutionAgent.SLICER_PY.getAbsolutePath(),
                         vocalFile.getPath(),
                         "--out",
                         sliceOutDirFld.getText() + "/" + voiceName,
@@ -180,18 +185,20 @@ public class GUI extends JFrame {
         for (String encoder : SPEECH_ENCODERS) {
             speechEncoderCbBx.addItem(encoder);
         }
+        speechEncoderCbBx.setSelectedItem(SPEECH_ENCODER_DEFAULT);
 
         /* F0 Predictor */
         // add entries
         for (String predictor : F0_PREDICTORS) {
             f0PredictorCbBx.addItem(predictor);
         }
+        f0PredictorCbBx.setSelectedItem(F0_PREDICTOR_DEFAULT);
 
         /* Loudness Embedding */
         loudnessEmbedCkBx.addActionListener(e -> {
             if (loudnessEmbedCkBx.isSelected()) {
                 speechEncoderCbBx.setEnabled(false);
-                speechEncoderCbBx.setSelectedIndex(0);
+                speechEncoderCbBx.setSelectedItem("vec768l12");
             } else {
                 speechEncoderCbBx.setEnabled(true);
             }
@@ -201,14 +208,13 @@ public class GUI extends JFrame {
         preprocessOutDirFld.setText(PREPROCESS_OUT_DIR_DEFAULT);
         preprocessBtn.addActionListener(e -> {
 
-            // disable related interactions before slicing
+            // disable related interactions before preprocess
             preprocessBtn.setEnabled(false);
             clearPreprocessOutDirBtn.setEnabled(false);
 
             resampleAudio();
-            // TODO
-
-            // enable related interactions after batch execution
+            splitDatasetAndGenerateConfig();
+            generateHubertAndF0();
         });
 
         /* Preprocess Out Dir Cleaner */
@@ -224,7 +230,9 @@ public class GUI extends JFrame {
             // limit the maximum line count of console history
             long exceededLineCount = consoleArea.getLineCount() - CONSOLE_LINE_COUNT_MAX;
             if (exceededLineCount > 0) {
-                consoleArea.setText(String.join("\n", consoleArea.getText().lines().skip(exceededLineCount).toList()) + '\n');
+                consoleArea.setText(
+                        String.join("\n", consoleArea.getText().lines().skip(exceededLineCount).toList()) + '\n'
+                );
             }
         });
     }
@@ -256,8 +264,8 @@ public class GUI extends JFrame {
      */
     private void resampleAudio() {
         String[] command = {
-                ExecutionAgent.PYTHON_EXE_PATH,
-                ExecutionAgent.RESAMPLER,
+                ExecutionAgent.PYTHON_EXE.getAbsolutePath(),
+                ExecutionAgent.RESAMPLER_PY.getAbsolutePath(),
         };
 
         executionAgent.executeLater(command,
@@ -272,9 +280,40 @@ public class GUI extends JFrame {
      */
     private void splitDatasetAndGenerateConfig() {
         List<String> command = new ArrayList<>();
-        command.add(ExecutionAgent.PYTHON_EXE_PATH);
-        command.add("");
-        // TODO
+        command.add(ExecutionAgent.PYTHON_EXE.getAbsolutePath());
+        command.add(ExecutionAgent.FLIST_CONFIGER_PY.getAbsolutePath());
+        command.add("--speech_encoder");
+        command.add((String) speechEncoderCbBx.getSelectedItem());
+        if (loudnessEmbedCkBx.isSelected()) {
+            command.add("--vol_aug");
+        }
+
+        executionAgent.executeLater(
+                command,
+                ExecutionAgent.SO_VITS_SVC_DIR,
+                () -> System.out.println("[INFO] Training Set, Validation Set, Configuration Files Created.")
+        );
+        executionAgent.invokeExecution();
+    }
+
+    /**
+     * Generate hubert and f0.
+     */
+    private void generateHubertAndF0() {
+        String[] command = {
+                ExecutionAgent.PYTHON_EXE.getAbsolutePath(),
+                ExecutionAgent.HUBERT_F0_GENERATOR_PY.getAbsolutePath(),
+                "--f0_predictor",
+                (String) f0PredictorCbBx.getSelectedItem()
+        };
+
+        executionAgent.executeLater(command, ExecutionAgent.SO_VITS_SVC_DIR, () -> {
+            System.out.println("[INFO] Hubert & F0 Predictor Generated.");
+            // enable related interactions after batch execution
+            preprocessBtn.setEnabled(true);
+            clearPreprocessOutDirBtn.setEnabled(true);
+        });
+        executionAgent.invokeExecution();
     }
 
     /**
