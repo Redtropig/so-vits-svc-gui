@@ -1,10 +1,11 @@
 package models;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Queue;
+import java.util.Scanner;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -16,10 +17,11 @@ public class ExecutionAgent {
 
     public static final File SO_VITS_SVC_DIR = new File(".\\so-vits-svc-4.1-Stable");
 
-    public static final String PYTHON_EXE_PATH = ".\\workenv\\python.exe";
-    public static final String SLICER_PATH = ".\\audio-slicer-main\\slicer2.py";
-    public static final String RESAMPLER = "resample.py";
-    public static final String FLIST_CONFIGER = "preprocess_flist_config.py";
+    public static final File PYTHON_EXE = new File(".\\workenv\\python.exe");
+    public static final File SLICER_PY = new File(".\\audio-slicer-main\\slicer2.py");
+    public static final File RESAMPLER_PY = new File(SO_VITS_SVC_DIR + "\\resample.py");
+    public static final File FLIST_CONFIGER_PY = new File(SO_VITS_SVC_DIR + "\\preprocess_flist_config.py");
+    public static final File HUBERT_F0_GENERATOR_PY = new File(SO_VITS_SVC_DIR + "\\preprocess_hubert_f0.py");
 
     private static ExecutionAgent executionAgent;
 
@@ -54,13 +56,20 @@ public class ExecutionAgent {
             workDirectory = null;
         }
 
-        ProcessBuilder processBuilder = new ProcessBuilder(command).inheritIO().directory(workDirectory);
+        ProcessBuilder processBuilder = new ProcessBuilder(command).directory(workDirectory);
 
         // Schedule in Queue
         return taskQueue.offer(() -> {
             try {
-                // Run the process, then do after-task execution
-                processBuilder.start().onExit().thenRun(afterExecution == null ? ()->{} : afterExecution);
+                // Run the process
+                Process process = processBuilder.start();
+                // Schedule after-task execution
+                process.onExit().thenRun(afterExecution == null ? ()->{} : afterExecution);
+                // Redirect process output
+                Scanner in = new Scanner(process.getInputStream(), StandardCharsets.UTF_8);
+                while (in.hasNext()) {
+                    System.out.println(in.nextLine());
+                }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
