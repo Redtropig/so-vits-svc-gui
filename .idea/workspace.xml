@@ -10,18 +10,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7fb02174-3f4b-4c79-8849-a38c17ff3a31" name="Changes" comment="Preprocess Area Design Done.">
-      <change afterPath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/pretrain/checkpoint_best_legacy_500.pt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/pretrain/fcpe.pt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/pretrain/hubert-soft-0d54a1f4.pt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/pretrain/medium.pt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/pretrain/meta.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/pretrain/nsf_hifigan/NOTICE.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/pretrain/nsf_hifigan/NOTICE.zh-CN.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/pretrain/nsf_hifigan/config.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/pretrain/nsf_hifigan/model" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/pretrain/nsf_hifigan/put_nsf_hifigan_ckpt_here" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/pretrain/put_hubert_ckpt_here" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/pretrain/rmvpe.pt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/configs/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/configs/config.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/configs/diffusion.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/configs/diffusion.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/filelists/train.txt" beforeDir="false" afterPath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/filelists/train.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/filelists/val.txt" beforeDir="false" afterPath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/filelists/val.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,7 +47,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "master",
     "last_opened_file_path": "C:/Users/10130/Desktop/so-vits-svc-gui/gui/out",
-    "project.structure.last.edited": "Artifacts",
+    "project.structure.last.edited": "Problems",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.25977013",
     "settings.editor.selected.configurable": "preferences.general"

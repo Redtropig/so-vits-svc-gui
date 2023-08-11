@@ -10,6 +10,8 @@
       <sourceFolder url="file://$MODULE_DIR$/gui/src/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/so-vits-svc-4.1-Stable/pretrain" />
       <excludeFolder url="file://$MODULE_DIR$/workenv" />
+      <excludeFolder url="file://$MODULE_DIR$/so-vits-svc-4.1-Stable/dataset" />
+      <excludeFolder url="file://$MODULE_DIR$/so-vits-svc-4.1-Stable/dataset_raw" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
