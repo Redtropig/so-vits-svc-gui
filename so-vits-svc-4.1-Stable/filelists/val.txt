@@ -1,2 +1,2 @@
-./dataset/44k/HuoLian/HappyH_4_HuoLian_10.wav
-./dataset/44k/HuoLian/HappyH_4_HuoLian_8.wav
+./dataset/44k/HuoLian/HappyH_4_HuoLian_7.wav
+./dataset/44k/HuoLian/HappyH_4_HuoLian_25.wav

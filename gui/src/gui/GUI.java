@@ -1,27 +1,31 @@
+package gui;
+
 import models.ExecutionAgent;
+import org.json.JSONObject;
 
 import javax.swing.*;
+import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import java.io.File;
-import java.io.OutputStream;
-import java.io.PrintStream;
+import java.io.*;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 public class GUI extends JFrame {
 
     private static final String PROGRAM_TITLE = "SoftVC VITS Singing Voice Conversion GUI";
-    private static final String ICON_PATH = ".\\gui\\data\\img\\GUI-Icon.png";
-    private static final String SLICING_OUT_DIR_DEFAULT = ".\\so-vits-svc-4.1-Stable\\dataset_raw";
-    private static final String PREPROCESS_OUT_DIR_DEFAULT = ".\\so-vits-svc-4.1-Stable\\dataset\\44k";
+    public static final Charset CHARSET_DISPLAY_DEFAULT = StandardCharsets.UTF_8;
+    protected static final String ICON_PATH = ".\\gui\\data\\img\\GUI-Icon.png";
+    private static final String TRAINING_CONFIG_PATH = ".\\so-vits-svc-4.1-Stable\\configs\\config.json";
+    private static final File SLICING_OUT_DIR_DEFAULT = new File(".\\so-vits-svc-4.1-Stable\\dataset_raw");
+    private static final File PREPROCESS_OUT_DIR_DEFAULT = new File(".\\so-vits-svc-4.1-Stable\\dataset\\44k");
+    private static final int JSON_STR_INDENT_FACTOR = 2;
     private static final int SLICING_MIN_INTERVAL_DEFAULT = 100; // ms
     private static final String[] VOCAL_FILE_EXTENSIONS_ACCEPTED = {"wav"};
     private static final String VOCAL_FILE_EXTENSIONS_DESCRIPTION = "Wave File(s)(*.wav)";
-    private static final String VOICE_NAME_DEFAULT = "default-voice";
+    private static final String SPEAKER_NAME_DEFAULT = "default-speaker";
     private static final int CONSOLE_LINE_COUNT_MAX = 512;
     private static final String SPEECH_ENCODER_DEFAULT = "vec768l12";
     private static final String[] SPEECH_ENCODERS = {
@@ -43,7 +47,12 @@ public class GUI extends JFrame {
             "rmvpe",
             "fcpe",
     };
-
+    private static final int GPU_ID_DEFAULT = 0;
+    private static final int BATCH_SIZE_DEFAULT = 4;
+    private static final int LOG_INTERVAL_DEFAULT = 50;
+    private static final int EVAL_INTERVAL_DEFAULT = 200;
+    private static final int KEEP_LAST_N_MODEL_DEFAULT = 1;
+    private static final String TRAINING_BTN_TEXT = "Start Training";
 
 
     private JPanel mainPanel;
@@ -61,8 +70,23 @@ public class GUI extends JFrame {
     private JButton preprocessBtn;
     private JTextField preprocessOutDirFld;
     private JButton clearPreprocessOutDirBtn;
+    private JPanel trainingPanel;
+    private JSpinner gpuIdSpinner;
+    private JSpinner batchSizeSpinner;
+    private JSpinner logIntervalSpinner;
+    private JSpinner evalIntervalSpinner;
+    private JSpinner keepLastNModelSpinner;
+    private JCheckBox allInMemCkBx;
+    private JRadioButton fp32Btn;
+    private JRadioButton fp16Btn;
+    private JRadioButton bf16Btn;
+    private JButton gpuMonitorBtn;
+    private JButton startTrainingBtn;
+    private JTextField speakerNameFld;
+    private ButtonGroup floatPrecisionGroup;
 
     private final ExecutionAgent executionAgent;
+
     private File[] vocalAudioFiles;
 
     public GUI() {
@@ -70,13 +94,7 @@ public class GUI extends JFrame {
         /* Global Settings */
         java.util.Locale.setDefault(Locale.ENGLISH);
         // redirect System out & err PrintStream
-        OutputStream outGUI = new OutputStream() {
-            @Override
-            public void write(int b) {
-                updateConsole(String.valueOf((char)b));
-            }
-        };
-        PrintStream printGUI = new PrintStream(outGUI, true, StandardCharsets.UTF_8);
+        PrintStream printGUI = getPrintStream();
         redirectSystemOutErrStream(printGUI, printGUI);
 
         /* UI Frame Settings */
@@ -99,6 +117,7 @@ public class GUI extends JFrame {
     private void createUIComponents() {
         createDatasetPrepArea();
         createPreprocessArea();
+        createTrainingArea();
         createConsoleArea();
     }
 
@@ -122,7 +141,7 @@ public class GUI extends JFrame {
         });
 
         /* Vocal File Slicer */
-        sliceOutDirFld.setText(SLICING_OUT_DIR_DEFAULT);
+        sliceOutDirFld.setText(SLICING_OUT_DIR_DEFAULT.getPath());
         vocalSlicerBtn.addActionListener(e -> {
             // No selected vocal file
             if (vocalAudioFiles == null || vocalAudioFiles.length == 0) {
@@ -130,13 +149,20 @@ public class GUI extends JFrame {
                 return;
             }
 
-            // user input voice name
-            String voiceName = JOptionPane.showInputDialog(datasetPrepPanel,
-                    "Set voice name:",
-                    "Voice Name",
-                    JOptionPane.QUESTION_MESSAGE).trim();
-            if (voiceName.isEmpty()) {  // handle empty Name
-                voiceName = VOICE_NAME_DEFAULT;
+            // user input speaker name
+            String speakerName = JOptionPane.showInputDialog(
+                    datasetPrepPanel,
+                    "Set speaker name:",
+                    "Speaker",
+                    JOptionPane.QUESTION_MESSAGE
+            );
+            // if user canceled the speaker-name input dialog
+            if (speakerName == null) {
+                return;
+            }
+            speakerName = speakerName.trim();
+            if (speakerName.isBlank()) {  // handle empty Name
+                speakerName = SPEAKER_NAME_DEFAULT;
             }
 
             // disable related interactions before slicing
@@ -153,7 +179,7 @@ public class GUI extends JFrame {
                         ExecutionAgent.SLICER_PY.getAbsolutePath(),
                         vocalFile.getPath(),
                         "--out",
-                        sliceOutDirFld.getText() + "/" + voiceName,
+                        sliceOutDirFld.getText() + "/" + speakerName,
                         "--min_interval",
                         String.valueOf(SLICING_MIN_INTERVAL_DEFAULT)
                 };
@@ -175,7 +201,11 @@ public class GUI extends JFrame {
         });
 
         /* Slice Out Dir Cleaner */
-        clearSliceOutDirBtn.addActionListener(e -> emptyDirectory(new File(SLICING_OUT_DIR_DEFAULT)));
+        clearSliceOutDirBtn.addActionListener(e -> {
+            for (File subDir : Objects.requireNonNull(SLICING_OUT_DIR_DEFAULT.listFiles(File::isDirectory))) {
+                removeDirectory(subDir);
+            }
+        });
     }
 
     private void createPreprocessArea() {
@@ -205,7 +235,7 @@ public class GUI extends JFrame {
         });
 
         /* Preprocessor */
-        preprocessOutDirFld.setText(PREPROCESS_OUT_DIR_DEFAULT);
+        preprocessOutDirFld.setText(PREPROCESS_OUT_DIR_DEFAULT.getPath());
         preprocessBtn.addActionListener(e -> {
 
             // disable related interactions before preprocess
@@ -218,8 +248,61 @@ public class GUI extends JFrame {
         });
 
         /* Preprocess Out Dir Cleaner */
-        clearPreprocessOutDirBtn.addActionListener(e -> emptyDirectory(new File(PREPROCESS_OUT_DIR_DEFAULT)));
+        clearPreprocessOutDirBtn.addActionListener(e -> {
+            for (File subDir : Objects.requireNonNull(PREPROCESS_OUT_DIR_DEFAULT.listFiles(File::isDirectory))) {
+                removeDirectory(subDir);
+            }
+        });
 
+    }
+
+    private void createTrainingArea() {
+        ChangeListener minZeroGuard = e -> {
+            JSpinner minZeroSpinner = (JSpinner) e.getSource();
+            minZeroSpinner.setValue(Math.max((Integer) minZeroSpinner.getValue(), 0));
+        };
+        ChangeListener minOneGuard = e -> {
+            JSpinner minOneSpinner = (JSpinner) e.getSource();
+            minOneSpinner.setValue(Math.max((Integer) minOneSpinner.getValue(), 1));
+        };
+
+        /* GPU ID */
+        gpuIdSpinner.setValue(GPU_ID_DEFAULT);
+        gpuIdSpinner.addChangeListener(minZeroGuard);
+
+        /* Batch Size */
+        batchSizeSpinner.setValue(BATCH_SIZE_DEFAULT);
+        batchSizeSpinner.addChangeListener(minOneGuard);
+
+        /* Log Interval */
+        logIntervalSpinner.setValue(LOG_INTERVAL_DEFAULT);
+        logIntervalSpinner.addChangeListener(minOneGuard);
+
+        /* Eval Interval */
+        evalIntervalSpinner.setValue(EVAL_INTERVAL_DEFAULT);
+        evalIntervalSpinner.addChangeListener(minOneGuard);
+
+        /* Keep Last N Models */
+        keepLastNModelSpinner.setValue(KEEP_LAST_N_MODEL_DEFAULT);
+        keepLastNModelSpinner.addChangeListener(minZeroGuard);
+
+        /* GPU Monitor */
+        gpuMonitorBtn.addActionListener(e -> new MonitorForGPU());
+
+        /* Trainer */
+        startTrainingBtn.setText(TRAINING_BTN_TEXT);
+        startTrainingBtn.addActionListener(e -> {
+            // Train or Abort
+            if (startTrainingBtn.getText().equals(TRAINING_BTN_TEXT)) {
+                startTrainingBtn.setText("Abort");
+
+                overwriteTrainingConfig();
+                displaySpeakersName();
+                startTraining();
+            } else { // Abort
+                executionAgent.getCurrentProcess().descendants().forEach(ProcessHandle::destroy);
+            }
+        });
     }
 
     private void createConsoleArea() {
@@ -238,18 +321,17 @@ public class GUI extends JFrame {
     }
 
     /**
-     * Empty a directory.
-     * @param directory directory to be emptied
+     * Remove a directory.
+     * @param directory directory to be removed
      * @dependency Windows OS
      */
-    private void emptyDirectory(File directory) {
+    private void removeDirectory(File directory) {
         if (directory.isDirectory()) {
             String[] command = {"cmd", "/c", "rmdir", "/s", "/q", directory.getAbsolutePath()};
 
             // schedule a task
             executionAgent.executeLater(command, null, () -> {
-                directory.mkdir();
-                System.out.println("[INFO] \"" + directory.getName() + "\" Directory Cleared.");
+                System.out.println("[INFO] Directory Removed: \"" + directory.getPath() + "\"");
             });
 
             // execute ASAP
@@ -314,6 +396,102 @@ public class GUI extends JFrame {
             clearPreprocessOutDirBtn.setEnabled(true);
         });
         executionAgent.invokeExecution();
+    }
+
+    /**
+     * Overwrite training config file
+     */
+    private void overwriteTrainingConfig() {
+        // Get JSON Objects
+        JSONObject configJsonObject = getConfigJsonObject();
+        JSONObject trainJsonObject = configJsonObject.getJSONObject("train");
+
+        // Modify train JSON Object
+        trainJsonObject.put("log_interval", (int) logIntervalSpinner.getValue());
+        trainJsonObject.put("eval_interval", (int) evalIntervalSpinner.getValue());
+        trainJsonObject.put("batch_size", (int) batchSizeSpinner.getValue());
+        if(fp32Btn.isSelected()) {
+            trainJsonObject.put("fp16_run", false);
+        } else {
+            trainJsonObject.put("fp16_run", true);
+            String halfType;
+            if (fp16Btn.isSelected()) {
+                halfType = fp16Btn.getText();
+            } else {
+                halfType = bf16Btn.getText();
+            }
+            trainJsonObject.put("half_type", halfType);
+        }
+        trainJsonObject.put("keep_ckpts", (int) keepLastNModelSpinner.getValue());
+        trainJsonObject.put("all_in_mem", allInMemCkBx.isSelected());
+
+        // Write config JSON back to config.json
+        configJsonObject.put("train", trainJsonObject);
+        try (FileWriter configJsonWriter = new FileWriter(TRAINING_CONFIG_PATH)) {
+            configJsonWriter.write(configJsonObject.toString(JSON_STR_INDENT_FACTOR));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void displaySpeakersName() {
+        JSONObject speakerJsonObject = getConfigJsonObject().getJSONObject("spk");
+        speakerNameFld.setText(speakerJsonObject.keySet().toString());
+    }
+
+    private static JSONObject getConfigJsonObject() {
+        StringBuilder configJsonStrBuilder = new StringBuilder();
+
+        // Read JSON String from config.json
+        try (Scanner in = new Scanner(new File(TRAINING_CONFIG_PATH))) {
+            while (in.hasNext()) {
+                configJsonStrBuilder.append(in.nextLine());
+            }
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Parse JSON String to JSON Object
+        return new JSONObject(configJsonStrBuilder.toString());
+    }
+
+    /**
+     * Start Training with config.json
+     */
+    private void startTraining() {
+        String[] command = {
+                ExecutionAgent.PYTHON_EXE.getAbsolutePath(),
+                ExecutionAgent.TRAIN_PY.getAbsolutePath(),
+                "-c",
+                new File(TRAINING_CONFIG_PATH).getAbsolutePath(),
+                "-m",
+                "44k"
+        };
+
+        executionAgent.executeLater(command, ExecutionAgent.SO_VITS_SVC_DIR, () -> {
+            startTrainingBtn.setText(TRAINING_BTN_TEXT);
+            System.out.println("[INFO] Training Stopped.");
+        });
+        executionAgent.invokeExecution();
+    }
+
+    /**
+     * Build & Get GUI Console PrintStream
+     * @return PrintStream to GUI Console
+     */
+    private PrintStream getPrintStream() {
+        OutputStream outGUI = new OutputStream() {
+            @Override
+            public void write(int b) {
+                updateConsole(String.valueOf((char)b)); // 1 Byte Char only (Unused)
+            }
+
+            @Override
+            public void write(byte[] b, int off, int len) {
+                updateConsole(new String(b, off, len, CHARSET_DISPLAY_DEFAULT));
+            }
+        };
+        return new PrintStream(outGUI, true, CHARSET_DISPLAY_DEFAULT);
     }
 
     /**

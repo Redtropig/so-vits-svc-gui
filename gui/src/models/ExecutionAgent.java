@@ -1,7 +1,9 @@
 package models;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
+import gui.GUI;
+
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Queue;
@@ -22,10 +24,13 @@ public class ExecutionAgent {
     public static final File RESAMPLER_PY = new File(SO_VITS_SVC_DIR + "\\resample.py");
     public static final File FLIST_CONFIGER_PY = new File(SO_VITS_SVC_DIR + "\\preprocess_flist_config.py");
     public static final File HUBERT_F0_GENERATOR_PY = new File(SO_VITS_SVC_DIR + "\\preprocess_hubert_f0.py");
+    public static final File TRAIN_PY = new File(SO_VITS_SVC_DIR + "\\train.py");
 
     private static ExecutionAgent executionAgent;
 
     private final Queue<Runnable> taskQueue;
+
+    private Process currentProcess;
 
     private ExecutionAgent() {
         taskQueue = new ConcurrentLinkedQueue<>();
@@ -37,6 +42,10 @@ public class ExecutionAgent {
      */
     public static ExecutionAgent getExecutionAgent() {
         return (executionAgent == null) ? (executionAgent = new ExecutionAgent()) : (executionAgent);
+    }
+
+    public Process getCurrentProcess() {
+        return currentProcess;
     }
 
     /**
@@ -56,20 +65,22 @@ public class ExecutionAgent {
             workDirectory = null;
         }
 
-        ProcessBuilder processBuilder = new ProcessBuilder(command).directory(workDirectory);
+        ProcessBuilder processBuilder = new ProcessBuilder(command).directory(workDirectory).redirectErrorStream(true);
 
         // Schedule in Queue
         return taskQueue.offer(() -> {
             try {
                 // Run the process
-                Process process = processBuilder.start();
+                currentProcess = processBuilder.start();
                 // Schedule after-task execution
-                process.onExit().thenRun(afterExecution == null ? ()->{} : afterExecution);
+                currentProcess.onExit().thenRun(afterExecution == null ? ()->{} : afterExecution);
                 // Redirect process output
-                Scanner in = new Scanner(process.getInputStream(), StandardCharsets.UTF_8);
+                Scanner in = new Scanner(currentProcess.getInputStream(), GUI.CHARSET_DISPLAY_DEFAULT);
                 while (in.hasNext()) {
                     System.out.println(in.nextLine());
+                    System.out.flush();
                 }
+                in.close();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -103,7 +114,7 @@ public class ExecutionAgent {
      * EXECUTABLE_STATE: execute all scheduled tasks orderly ASAP.
      */
     public void invokeExecution() {
-        new Thread(this::execute).start();
+        new Thread(this::execute, "Execute-Agent").start();
     }
 
 }

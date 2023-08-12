@@ -1,3 +1,5 @@
+import gui.GUI;
+
 import java.awt.*;
 
 public class Main {

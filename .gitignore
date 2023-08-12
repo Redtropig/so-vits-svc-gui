@@ -1,5 +1,5 @@
 /workenv/
 /gui/out/
 /so-vits-svc-4.1-Stable/pretrain/
-/so-vits-svc-4.1-Stable/dataset/
-/so-vits-svc-4.1-Stable/dataset_raw/
+/so-vits-svc-4.1-Stable/logs/44k/
+/so-vits-svc-4.1-Stable/pre_trained_model/
