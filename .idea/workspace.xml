@@ -9,24 +9,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7fb02174-3f4b-4c79-8849-a38c17ff3a31" name="Changes" comment="Repo Fixed.">
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gui/lib/json-20230227.jar" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gui/src/gui/GUI.form" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gui/src/gui/MonitorForGPU.form" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gui/src/gui/MonitorForGPU.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/lib.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/lib.xml" afterDir="false" />
+    <list default="true" id="7fb02174-3f4b-4c79-8849-a38c17ff3a31" name="Changes" comment="Training Area Design done.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gui/readme.md" beforeDir="false" afterPath="$PROJECT_DIR$/gui/readme.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gui/src/GUI.form" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/gui/src/GUI.java" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/gui/GUI.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gui/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gui/src/models/ExecutionAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/models/ExecutionAgent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/src/gui/GUI.form" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/gui/GUI.form" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/src/gui/GUI.java" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/gui/GUI.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/configs/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/configs/config.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/configs/diffusion.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/configs/diffusion.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/filelists/train.txt" beforeDir="false" afterPath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/filelists/train.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/filelists/val.txt" beforeDir="false" afterPath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/filelists/val.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/logs/44k/put_pretrained_model_here" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,19 +50,20 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/10130/Desktop/so-vits-svc-gui/gui/lib/json-20230227.jar&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.25977013&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.general&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "UI_DESIGNER_EDITOR_MODE.UIDesignerToolWindowManager.WIDTH": "410",
+    "git-widget-placeholder": "master",
+    "last_opened_file_path": "C:/Users/10130/Desktop/so-vits-svc-gui/gui/lib/json-20230227.jar",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.25977013",
+    "settings.editor.selected.configurable": "preferences.general"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\10130\Desktop\so-vits-svc-gui\gui\src\gui" />
@@ -117,7 +108,15 @@
       <option name="project" value="LOCAL" />
       <updated>1691733032577</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Training Area Design done.">
+      <option name="closed" value="true" />
+      <created>1691866521692</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1691866521692</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -134,7 +133,16 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Preprocess Area Design Done." />
     <MESSAGE value="Repo Fixed." />
-    <option name="LAST_COMMIT_MESSAGE" value="Repo Fixed." />
+    <MESSAGE value="Training Area Design done." />
+    <option name="LAST_COMMIT_MESSAGE" value="Training Area Design done." />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
+  </component>
+  <component name="XDebuggerManager">
+    <watches-manager>
+      <configuration name="Application">
+        <watch expression="TRAINING_CONFIG_LOG.exists()" />
+        <watch expression="evalIntervalSpinner.getValue()" />
+      </configuration>
+    </watches-manager>
   </component>
 </project>

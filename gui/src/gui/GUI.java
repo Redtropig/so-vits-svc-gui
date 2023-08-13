@@ -10,6 +10,7 @@ import java.awt.*;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
 import java.util.List;
 import java.util.*;
 
@@ -18,9 +19,11 @@ public class GUI extends JFrame {
     private static final String PROGRAM_TITLE = "SoftVC VITS Singing Voice Conversion GUI";
     public static final Charset CHARSET_DISPLAY_DEFAULT = StandardCharsets.UTF_8;
     protected static final String ICON_PATH = ".\\gui\\data\\img\\GUI-Icon.png";
-    private static final String TRAINING_CONFIG_PATH = ".\\so-vits-svc-4.1-Stable\\configs\\config.json";
-    private static final File SLICING_OUT_DIR_DEFAULT = new File(".\\so-vits-svc-4.1-Stable\\dataset_raw");
-    private static final File PREPROCESS_OUT_DIR_DEFAULT = new File(".\\so-vits-svc-4.1-Stable\\dataset\\44k");
+    private static final File SLICING_OUT_DIR_DEFAULT = new File(ExecutionAgent.SO_VITS_SVC_DIR + "\\dataset_raw");
+    private static final File PREPROCESS_OUT_DIR_DEFAULT = new File(ExecutionAgent.SO_VITS_SVC_DIR + "\\dataset\\44k");
+    private static final File TRAINING_LOG_DIR_DEFAULT = new File(ExecutionAgent.SO_VITS_SVC_DIR + "\\logs\\44k");
+    private static final File TRAINING_CONFIG = new File(ExecutionAgent.SO_VITS_SVC_DIR + "\\configs\\config.json");
+    private static final File TRAINING_CONFIG_LOG = new File(TRAINING_LOG_DIR_DEFAULT + "\\config.json");
     private static final int JSON_STR_INDENT_FACTOR = 2;
     private static final int SLICING_MIN_INTERVAL_DEFAULT = 100; // ms
     private static final String[] VOCAL_FILE_EXTENSIONS_ACCEPTED = {"wav"};
@@ -83,6 +86,8 @@ public class GUI extends JFrame {
     private JButton gpuMonitorBtn;
     private JButton startTrainingBtn;
     private JTextField speakerNameFld;
+    private JTextField trainLogDirFld;
+    private JButton clearTrainLogDirBtn;
     private ButtonGroup floatPrecisionGroup;
 
     private final ExecutionAgent executionAgent;
@@ -290,17 +295,36 @@ public class GUI extends JFrame {
         gpuMonitorBtn.addActionListener(e -> new MonitorForGPU());
 
         /* Trainer */
+        trainLogDirFld.setText(TRAINING_LOG_DIR_DEFAULT.getPath());
         startTrainingBtn.setText(TRAINING_BTN_TEXT);
         startTrainingBtn.addActionListener(e -> {
             // Train or Abort
             if (startTrainingBtn.getText().equals(TRAINING_BTN_TEXT)) {
                 startTrainingBtn.setText("Abort");
+                clearTrainLogDirBtn.setEnabled(false);
 
                 overwriteTrainingConfig();
+                loadTrainingConfig();
                 displaySpeakersName();
                 startTraining();
             } else { // Abort
                 executionAgent.getCurrentProcess().descendants().forEach(ProcessHandle::destroy);
+            }
+        });
+
+        /* Train Log Cleaner */
+        clearTrainLogDirBtn.addActionListener(e -> {
+            for (File subFile : Objects.requireNonNull(TRAINING_LOG_DIR_DEFAULT.listFiles((f) ->
+                    !(f.getName().equals("diffusion") ||
+                            f.getName().equals("D_0.pth") ||
+                            f.getName().equals("G_0.pth")))))
+            {
+                if (subFile.isDirectory()) {
+                    removeDirectory(subFile);
+                } else {
+                    subFile.delete();
+                    System.out.println("[INFO] File Removed: \"" + subFile.getPath() + "\"");
+                }
             }
         });
     }
@@ -399,12 +423,34 @@ public class GUI extends JFrame {
     }
 
     /**
-     * Overwrite training config file
+     * Overwrite training config to TRAINING_CONFIG file
      */
     private void overwriteTrainingConfig() {
         // Get JSON Objects
         JSONObject configJsonObject = getConfigJsonObject();
         JSONObject trainJsonObject = configJsonObject.getJSONObject("train");
+
+        // Commit values & Handle invalid user inputs (to previous valid setting)
+        try {
+            logIntervalSpinner.commitEdit();
+        } catch (ParseException e) {
+            logIntervalSpinner.updateUI();
+        }
+        try {
+            evalIntervalSpinner.commitEdit();
+        } catch (ParseException e) {
+            evalIntervalSpinner.updateUI();
+        }
+        try {
+            batchSizeSpinner.commitEdit();
+        } catch (ParseException e) {
+            batchSizeSpinner.updateUI();
+        }
+        try {
+            keepLastNModelSpinner.commitEdit();
+        } catch (ParseException e) {
+            keepLastNModelSpinner.updateUI();
+        }
 
         // Modify train JSON Object
         trainJsonObject.put("log_interval", (int) logIntervalSpinner.getValue());
@@ -425,13 +471,41 @@ public class GUI extends JFrame {
         trainJsonObject.put("keep_ckpts", (int) keepLastNModelSpinner.getValue());
         trainJsonObject.put("all_in_mem", allInMemCkBx.isSelected());
 
-        // Write config JSON back to config.json
+        // Write config JSON back to TRAINING_CONFIG
         configJsonObject.put("train", trainJsonObject);
-        try (FileWriter configJsonWriter = new FileWriter(TRAINING_CONFIG_PATH)) {
+        try (FileWriter configJsonWriter = new FileWriter(TRAINING_CONFIG)) {
             configJsonWriter.write(configJsonObject.toString(JSON_STR_INDENT_FACTOR));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Load config from TRAINING_CONFIG_LOG if it exists, otherwise from TRAINING_CONFIG.
+     */
+    private void loadTrainingConfig() {
+        // Get JSON Objects
+        JSONObject configJsonObject = getConfigJsonObject();
+        JSONObject trainJsonObject = configJsonObject.getJSONObject("train");
+
+        // Load train JSON Object
+        logIntervalSpinner.setValue(trainJsonObject.getInt("log_interval"));
+        evalIntervalSpinner.setValue(trainJsonObject.getInt("eval_interval"));
+        batchSizeSpinner.setValue(trainJsonObject.getInt("batch_size"));
+        if (trainJsonObject.getBoolean("fp16_run")) {
+            switch (trainJsonObject.getString("half_type")) {
+                case "fp16" -> {
+                    fp16Btn.setSelected(true);
+                }
+                case "bf16" -> {
+                    bf16Btn.setSelected(true);
+                }
+            }
+        } else {
+            fp32Btn.setSelected(true);
+        }
+        keepLastNModelSpinner.setValue(trainJsonObject.getInt("keep_ckpts"));
+        allInMemCkBx.setSelected(trainJsonObject.getBoolean("all_in_mem"));
     }
 
     private void displaySpeakersName() {
@@ -439,11 +513,16 @@ public class GUI extends JFrame {
         speakerNameFld.setText(speakerJsonObject.keySet().toString());
     }
 
+    /**
+     * Get Training Config JSONObject.
+     * @return Config JSONObject from TRAINING_CONFIG_LOG if it exists, otherwise from TRAINING_CONFIG.
+     */
     private static JSONObject getConfigJsonObject() {
+        File loadSource = TRAINING_CONFIG_LOG.exists() ? TRAINING_CONFIG_LOG : TRAINING_CONFIG;
         StringBuilder configJsonStrBuilder = new StringBuilder();
 
-        // Read JSON String from config.json
-        try (Scanner in = new Scanner(new File(TRAINING_CONFIG_PATH))) {
+        // Load JSON String from loadSource
+        try (Scanner in = new Scanner(loadSource)) {
             while (in.hasNext()) {
                 configJsonStrBuilder.append(in.nextLine());
             }
@@ -451,7 +530,7 @@ public class GUI extends JFrame {
             throw new RuntimeException(e);
         }
 
-        // Parse JSON String to JSON Object
+        // Parse JSON String to JSONObject
         return new JSONObject(configJsonStrBuilder.toString());
     }
 
@@ -463,13 +542,14 @@ public class GUI extends JFrame {
                 ExecutionAgent.PYTHON_EXE.getAbsolutePath(),
                 ExecutionAgent.TRAIN_PY.getAbsolutePath(),
                 "-c",
-                new File(TRAINING_CONFIG_PATH).getAbsolutePath(),
+                TRAINING_CONFIG.getAbsolutePath(),
                 "-m",
                 "44k"
         };
 
         executionAgent.executeLater(command, ExecutionAgent.SO_VITS_SVC_DIR, () -> {
             startTrainingBtn.setText(TRAINING_BTN_TEXT);
+            clearTrainLogDirBtn.setEnabled(true);
             System.out.println("[INFO] Training Stopped.");
         });
         executionAgent.invokeExecution();

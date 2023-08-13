@@ -49,7 +49,7 @@
     "resblock": "1",
     "ssl_dim": 768,
     "kernel_size": 3,
-    "vol_embedding": false,
+    "vol_embedding": true,
     "flow_share_parameter": false,
     "upsample_rates": [
       8,
@@ -62,7 +62,7 @@
     "speaker_embedding": false,
     "use_transformer_flow": false,
     "n_heads": 2,
-    "n_speakers": 1,
+    "n_speakers": 3,
     "upsample_initial_channel": 512,
     "p_dropout": 0.1,
     "resblock_kernel_sizes": [
@@ -75,7 +75,7 @@
     "n_layers": 6
   },
   "train": {
-    "vol_aug": false,
+    "vol_aug": true,
     "batch_size": 4,
     "init_lr_ratio": 1,
     "seed": 1234,
@@ -89,7 +89,7 @@
     "lr_decay": 0.999875,
     "segment_size": 10240,
     "c_kl": 1,
-    "eval_interval": 200,
+    "eval_interval": 150,
     "port": "8001",
     "betas": [
       0.8,
@@ -101,5 +101,9 @@
     "use_sr": true,
     "max_speclen": 512
   },
-  "spk": {"HuoLian": 0}
+  "spk": {
+    "ChangGe": 0,
+    "LuoLian": 1,
+    "QiXuan": 2
+  }
 }
