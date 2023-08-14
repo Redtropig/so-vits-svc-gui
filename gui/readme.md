@@ -19,6 +19,7 @@ This project was designed to alleviate the difficulties & confusions for non CS-
 - Be able to clear Console screen by right click on Console area.
 - Be able to interact with GUI while Background-Tasks are running, and GUI quickly responds.
 - Be able to schedule Tasks and execute them later by the time-order as the order they were added.
+- Be able to process Multiple Files in a batch at one time.
 - When invalid inputs happen accidentally, there should be neither fatal error nor file-system destruction occurs, and program should immediately restore into a Valid/Safe STATE.
 
 ### **References**
