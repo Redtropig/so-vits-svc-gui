@@ -747,7 +747,14 @@ public class GUI extends JFrame {
         command.add("--model_path");
         File[] trainedModels = TRAINING_LOG_DIR_DEFAULT.listFiles((dir, name) ->
                 name.matches(REGEX_TRAINED_MODEL_NAME));
-        assert Objects.requireNonNull(trainedModels).length == 1;
+        assert trainedModels != null;
+        // logs: no trained model
+        if (trainedModels.length == 0) {
+            System.out.println("[ERROR] Model not Trained.");
+            inferenceBtn.setText(INFERENCE_BTN_TEXT);
+            return;
+        }
+        assert trainedModels.length == 1;
         command.add(trainedModels[0].getAbsolutePath());
 
         command.add("--config_path");
@@ -799,6 +806,11 @@ public class GUI extends JFrame {
                         );
                     }
 
+                    // reset Inference State -> Vacant
+                    vocalAudioFiles = null;
+                    vocalChosenFld.setText("");
+                    speakerPickCbBx.setEnabled(false);
+                    speakerPickCbBx.removeAllItems();
                     inferenceBtn.setText(INFERENCE_BTN_TEXT);
                 }
         );

@@ -2,9 +2,9 @@ data:
   block_size: 512
   cnhubertsoft_gate: 10
   duration: 2
-  encoder: whisper-ppg-large
+  encoder: vec768l12
   encoder_hop_size: 320
-  encoder_out_channels: 1280
+  encoder_out_channels: 768
   encoder_sample_rate: 16000
   extensions:
   - wav
@@ -24,14 +24,13 @@ model:
   n_chans: 512
   n_hidden: 256
   n_layers: 20
-  n_spk: 3
+  n_spk: 2
   timesteps: 1000
   type: Diffusion
   use_pitch_aug: true
 spk:
+  CG: 0
   HL: 1
-  QX: 2
-  default-speaker: 0
 train:
   amp_dtype: fp32
   batch_size: 48
