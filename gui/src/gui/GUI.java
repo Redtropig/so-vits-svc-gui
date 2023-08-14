@@ -10,24 +10,30 @@ import java.awt.*;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.text.ParseException;
 import java.util.List;
 import java.util.*;
+
+import static models.ExecutionAgent.*;
 
 public class GUI extends JFrame {
 
     private static final String PROGRAM_TITLE = "SoftVC VITS Singing Voice Conversion GUI";
     public static final Charset CHARSET_DISPLAY_DEFAULT = StandardCharsets.UTF_8;
     protected static final String ICON_PATH = ".\\gui\\data\\img\\GUI-Icon.png";
-    private static final File SLICING_OUT_DIR_DEFAULT = new File(ExecutionAgent.SO_VITS_SVC_DIR + "\\dataset_raw");
-    private static final File PREPROCESS_OUT_DIR_DEFAULT = new File(ExecutionAgent.SO_VITS_SVC_DIR + "\\dataset\\44k");
-    private static final File TRAINING_LOG_DIR_DEFAULT = new File(ExecutionAgent.SO_VITS_SVC_DIR + "\\logs\\44k");
-    private static final File TRAINING_CONFIG = new File(ExecutionAgent.SO_VITS_SVC_DIR + "\\configs\\config.json");
+    private static final File SLICING_OUT_DIR_DEFAULT = new File(SO_VITS_SVC_DIR + "\\dataset_raw");
+    private static final File PREPROCESS_OUT_DIR_DEFAULT = new File(SO_VITS_SVC_DIR + "\\dataset\\44k");
+    private static final File INFERENCE_INPUT_DIR_DEFAULT = new File(SO_VITS_SVC_DIR + "\\raw");
+    private static final File TRAINING_LOG_DIR_DEFAULT = new File(SO_VITS_SVC_DIR + "\\logs\\44k");
+    private static final File TRAINING_CONFIG = new File(SO_VITS_SVC_DIR + "\\configs\\config.json");
     private static final File TRAINING_CONFIG_LOG = new File(TRAINING_LOG_DIR_DEFAULT + "\\config.json");
     private static final int JSON_STR_INDENT_FACTOR = 2;
     private static final int SLICING_MIN_INTERVAL_DEFAULT = 100; // ms
-    private static final String[] VOCAL_FILE_EXTENSIONS_ACCEPTED = {"wav"};
-    private static final String VOCAL_FILE_EXTENSIONS_DESCRIPTION = "Wave File(s)(*.wav)";
+    private static final String AUDIO_FILE_OUT_FORMAT = "wav";
+    private static final String[] AUDIO_FILE_EXTENSIONS_ACCEPTED = {"wav"};
+    private static final String AUDIO_FILE_EXTENSIONS_DESCRIPTION = "Wave File(s)(*.wav)";
     private static final String SPEAKER_NAME_DEFAULT = "default-speaker";
     private static final int CONSOLE_LINE_COUNT_MAX = 512;
     private static final String SPEECH_ENCODER_DEFAULT = "vec768l12";
@@ -41,7 +47,8 @@ public class GUI extends JFrame {
             "whisper-ppg-large",
             "wavlmbase+"
     };
-    private static final String F0_PREDICTOR_DEFAULT = "rmvpe";
+    private static final String F0_PREDICTOR_PREPROCESS_DEFAULT = "rmvpe";
+    private static final String F0_PREDICTOR_INFER_DEFAULT = "pm";
     private static final String[] F0_PREDICTORS = {
             "crepe",
             "dio",
@@ -56,19 +63,23 @@ public class GUI extends JFrame {
     private static final int EVAL_INTERVAL_DEFAULT = 200;
     private static final int KEEP_LAST_N_MODEL_DEFAULT = 1;
     private static final String TRAINING_BTN_TEXT = "Start Training";
+    private static final String INFERENCE_BTN_TEXT = "Start Inference";
+    private static final String REGEX_TRAINED_MODEL_NAME = "^G_[1-9]\\d*\\.pth$";
+    private static final float CLIP_INFER_DEFAULT = 0;
+    private static final int PITCH_SHIFT_INFER_DEFAULT = 0;
 
 
     private JPanel mainPanel;
     private JPanel datasetPrepPanel;
     private JTextArea consoleArea;
-    private JTextField vocalInPathFld;
-    private JButton vocalChooserBtn;
+    private JTextField voiceChosenFld;
+    private JButton voiceFileChooserBtn;
     private JTextField sliceOutDirFld;
-    private JButton vocalSlicerBtn;
+    private JButton voiceSlicerBtn;
     private JButton clearSliceOutDirBtn;
     private JScrollPane consolePanel;
     private JComboBox<String> speechEncoderCbBx;
-    private JComboBox<String> f0PredictorCbBx;
+    private JComboBox<String> f0PredictorPreproCbBx;
     private JCheckBox loudnessEmbedCkBx;
     private JButton preprocessBtn;
     private JTextField preprocessOutDirFld;
@@ -88,10 +99,18 @@ public class GUI extends JFrame {
     private JTextField speakerNameFld;
     private JTextField trainLogDirFld;
     private JButton clearTrainLogDirBtn;
+    private JComboBox<String> f0PredictorInferCbBx;
+    private JComboBox<String> speakerPickCbBx;
+    private JButton inferenceBtn;
+    private JTextField vocalChosenFld;
+    private JButton vocalChooserBtn;
+    private JPanel inferencePanel;
+    private JCheckBox nsfHiFiGanCkBx;
     private ButtonGroup floatPrecisionGroup;
 
     private final ExecutionAgent executionAgent;
 
+    private File[] voiceAudioFiles;
     private File[] vocalAudioFiles;
 
     public GUI() {
@@ -106,11 +125,11 @@ public class GUI extends JFrame {
         setTitle(PROGRAM_TITLE);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setIconImage(new ImageIcon(ICON_PATH).getImage());
-        setResizable(true);
+        setResizable(false);
         setVisible(true);
 
         /* Field Assignments */
-        executionAgent = ExecutionAgent.getExecutionAgent();
+        executionAgent = getExecutionAgent();
 
         /* Components */
         createUIComponents();
@@ -123,34 +142,35 @@ public class GUI extends JFrame {
         createDatasetPrepArea();
         createPreprocessArea();
         createTrainingArea();
+        createInferenceArea();
         createConsoleArea();
     }
 
     private void createDatasetPrepArea() {
 
-        /* Vocal File Chooser */
-        vocalChooserBtn.addActionListener(e -> {
-            JFileChooser vocalFileChooser = new JFileChooser();
-            vocalFileChooser.setAcceptAllFileFilterUsed(false);
-            vocalFileChooser.setMultiSelectionEnabled(true);
-            vocalFileChooser.setFileFilter(new FileNameExtensionFilter(VOCAL_FILE_EXTENSIONS_DESCRIPTION,
-                    VOCAL_FILE_EXTENSIONS_ACCEPTED));
+        /* Voice File Chooser */
+        voiceFileChooserBtn.addActionListener(e -> {
+            JFileChooser voiceFileChooser = new JFileChooser();
+            voiceFileChooser.setAcceptAllFileFilterUsed(false);
+            voiceFileChooser.setMultiSelectionEnabled(true);
+            voiceFileChooser.setFileFilter(new FileNameExtensionFilter(AUDIO_FILE_EXTENSIONS_DESCRIPTION,
+                    AUDIO_FILE_EXTENSIONS_ACCEPTED));
 
-            // Choose vocal file(s)
-            if (vocalFileChooser.showOpenDialog(datasetPrepPanel) == JFileChooser.APPROVE_OPTION) {
-                vocalAudioFiles = vocalFileChooser.getSelectedFiles();
+            // Choose voice file(s)
+            if (voiceFileChooser.showOpenDialog(datasetPrepPanel) == JFileChooser.APPROVE_OPTION) {
+                voiceAudioFiles = voiceFileChooser.getSelectedFiles();
 
-                // Update file-path text field
-                vocalInPathFld.setText(String.join(";", Arrays.stream(vocalAudioFiles).map(File::getName).toList()));
+                // Update file-chosen text field
+                voiceChosenFld.setText(String.join(";", Arrays.stream(voiceAudioFiles).map(File::getName).toList()));
             }
         });
 
-        /* Vocal File Slicer */
+        /* Voice File Slicer */
         sliceOutDirFld.setText(SLICING_OUT_DIR_DEFAULT.getPath());
-        vocalSlicerBtn.addActionListener(e -> {
-            // No selected vocal file
-            if (vocalAudioFiles == null || vocalAudioFiles.length == 0) {
-                System.err.println("[!] Please select at least 1 vocal file.");
+        voiceSlicerBtn.addActionListener(e -> {
+            // No selected voice file
+            if (voiceAudioFiles == null || voiceAudioFiles.length == 0) {
+                System.err.println("[!] Please SELECT at least 1 VOICE file.");
                 return;
             }
 
@@ -171,18 +191,18 @@ public class GUI extends JFrame {
             }
 
             // disable related interactions before slicing
-            vocalSlicerBtn.setEnabled(false);
+            voiceSlicerBtn.setEnabled(false);
             clearSliceOutDirBtn.setEnabled(false);
 
-            // slice each vocal file
-            for (int i = vocalAudioFiles.length - 1; i >= 0; i--) {
-                File vocalFile = vocalAudioFiles[i];
+            // slice each voice file
+            for (int i = voiceAudioFiles.length - 1; i >= 0; i--) {
+                File voiceFile = voiceAudioFiles[i];
 
                 // Command construction
                 String[] command = {
-                        ExecutionAgent.PYTHON_EXE.getAbsolutePath(),
-                        ExecutionAgent.SLICER_PY.getAbsolutePath(),
-                        vocalFile.getPath(),
+                        PYTHON_EXE.getAbsolutePath(),
+                        SLICER_PY.getAbsolutePath(),
+                        voiceFile.getPath(),
                         "--out",
                         sliceOutDirFld.getText() + "/" + speakerName,
                         "--min_interval",
@@ -191,14 +211,26 @@ public class GUI extends JFrame {
 
                 // schedule a task
                 int finalI = i;
-                executionAgent.executeLater(command, null, () -> {
-                    System.out.println("[INFO] Slicing completed: " + vocalFile.getName());
-                    if (finalI == 0) {
-                        // enable related interactions after batch execution
-                        vocalSlicerBtn.setEnabled(true);
-                        clearSliceOutDirBtn.setEnabled(true);
-                    }
-                });
+                executionAgent.executeLater(
+                        command,
+                        null,
+                        (process) -> {
+                            if (process.exitValue() == 0) {
+                                System.out.println("[INFO] Slicing completed: " + voiceFile.getName());
+                            } else {
+                                System.out.println("[ERROR] \"" +
+                                        SLICER_PY.getName() +
+                                        "\" terminated unexpectedly, exit code: " +
+                                        process.exitValue()
+                                );
+                            }
+
+                            if (finalI == 0) {
+                                // enable related interactions after batch execution
+                                voiceSlicerBtn.setEnabled(true);
+                                clearSliceOutDirBtn.setEnabled(true);
+                            }
+                        });
             }
 
             // execute ASAP
@@ -225,9 +257,9 @@ public class GUI extends JFrame {
         /* F0 Predictor */
         // add entries
         for (String predictor : F0_PREDICTORS) {
-            f0PredictorCbBx.addItem(predictor);
+            f0PredictorPreproCbBx.addItem(predictor);
         }
-        f0PredictorCbBx.setSelectedItem(F0_PREDICTOR_DEFAULT);
+        f0PredictorPreproCbBx.setSelectedItem(F0_PREDICTOR_PREPROCESS_DEFAULT);
 
         /* Loudness Embedding */
         loudnessEmbedCkBx.addActionListener(e -> {
@@ -242,6 +274,12 @@ public class GUI extends JFrame {
         /* Preprocessor */
         preprocessOutDirFld.setText(PREPROCESS_OUT_DIR_DEFAULT.getPath());
         preprocessBtn.addActionListener(e -> {
+
+            // dataset_raw: nothing is prepared
+            if (Objects.requireNonNull(SLICING_OUT_DIR_DEFAULT.listFiles(File::isDirectory)).length == 0) {
+                System.err.println("[!] Please SLICE at least 1 VOICE file.");
+                return;
+            }
 
             // disable related interactions before preprocess
             preprocessBtn.setEnabled(false);
@@ -303,8 +341,12 @@ public class GUI extends JFrame {
                 startTrainingBtn.setText("Abort");
                 clearTrainLogDirBtn.setEnabled(false);
 
+                // if resume training
+                if (TRAINING_CONFIG_LOG.exists()) {
+                    loadTrainingConfig();
+                }
+
                 overwriteTrainingConfig();
-                loadTrainingConfig();
                 displaySpeakersName();
                 startTraining();
             } else { // Abort
@@ -317,14 +359,85 @@ public class GUI extends JFrame {
             for (File subFile : Objects.requireNonNull(TRAINING_LOG_DIR_DEFAULT.listFiles((f) ->
                     !(f.getName().equals("diffusion") ||
                             f.getName().equals("D_0.pth") ||
-                            f.getName().equals("G_0.pth")))))
-            {
+                            f.getName().equals("G_0.pth"))))) {
                 if (subFile.isDirectory()) {
                     removeDirectory(subFile);
                 } else {
                     subFile.delete();
                     System.out.println("[INFO] File Removed: \"" + subFile.getPath() + "\"");
                 }
+            }
+        });
+    }
+
+    private void createInferenceArea() {
+
+        /* Vocal File Chooser */
+        vocalChooserBtn.addActionListener(e -> {
+            JFileChooser vocalFileChooser = new JFileChooser();
+            vocalFileChooser.setAcceptAllFileFilterUsed(false);
+            vocalFileChooser.setMultiSelectionEnabled(true);
+            vocalFileChooser.setFileFilter(new FileNameExtensionFilter(AUDIO_FILE_EXTENSIONS_DESCRIPTION,
+                    AUDIO_FILE_EXTENSIONS_ACCEPTED));
+
+            // Choose vocal file(s)
+            if (vocalFileChooser.showOpenDialog(inferencePanel) == JFileChooser.APPROVE_OPTION) {
+                vocalAudioFiles = vocalFileChooser.getSelectedFiles();
+
+                // Update file-chosen text field
+                vocalChosenFld.setText(String.join(";", Arrays.stream(vocalAudioFiles).map(File::getName).toList()));
+
+                // Copy vocal files into INFERENCE_INPUT_DIR_DEFAULT
+                // & vocalAudioFiles follows the file[] reference as copied
+                vocalAudioFiles = Arrays.stream(vocalAudioFiles).map((f) -> {
+                    try {
+                        File copied = Files.copy(
+                                f.toPath(),
+                                new File(INFERENCE_INPUT_DIR_DEFAULT.getPath() + "\\" + f.getName()).toPath(),
+                                StandardCopyOption.REPLACE_EXISTING
+                        ).toFile();
+
+                        // register copied file as temporary
+                        copied.deleteOnExit();
+
+                        return copied;
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }).toList().toArray(vocalAudioFiles);
+
+                // Unlock Speaker picking ComboBox
+                speakerPickCbBx.removeAllItems();
+                getConfigJsonObject().getJSONObject("spk").keySet().forEach((spk) -> {
+                    speakerPickCbBx.addItem(spk);
+                });
+                speakerPickCbBx.setEnabled(true);
+            }
+        });
+
+        /* F0 Predictor for Inference */
+        // add entries
+        for (String predictor : F0_PREDICTORS) {
+            f0PredictorInferCbBx.addItem(predictor);
+        }
+        f0PredictorInferCbBx.setSelectedItem(F0_PREDICTOR_INFER_DEFAULT);
+
+        /* Inference */
+        inferenceBtn.addActionListener(e -> {
+            // raw: no vocal file is chosen
+            if (vocalAudioFiles == null) {
+                System.out.println("[!] Please SELECT at least 1 VOCAL file.");
+                return;
+            }
+
+            // Infer or Abort
+            if (inferenceBtn.getText().equals(INFERENCE_BTN_TEXT)) {
+                inferenceBtn.setText("Abort");
+                System.out.println("[INFO] Inference Running... (this may take minutes without console output)");
+
+                startInference();
+            } else { // Abort
+                executionAgent.getCurrentProcess().destroy();
             }
         });
     }
@@ -342,21 +455,40 @@ public class GUI extends JFrame {
                 );
             }
         });
+
+        /* Console Popup Menu */
+        JPopupMenu consoleMenu = new JPopupMenu("console popup menu");
+        JMenuItem clearConsoleItm = new JMenuItem("clear");
+        clearConsoleItm.addActionListener(e -> consoleArea.setText(""));
+        consoleMenu.add(clearConsoleItm);
+        consoleArea.setComponentPopupMenu(consoleMenu);
     }
 
     /**
      * Remove a directory.
+     *
      * @param directory directory to be removed
      * @dependency Windows OS
      */
     private void removeDirectory(File directory) {
         if (directory.isDirectory()) {
-            String[] command = {"cmd", "/c", "rmdir", "/s", "/q", directory.getAbsolutePath()};
+            String[] command = {"cmd.exe", "/c", "rmdir", "/s", "/q", directory.getAbsolutePath()};
 
             // schedule a task
-            executionAgent.executeLater(command, null, () -> {
-                System.out.println("[INFO] Directory Removed: \"" + directory.getPath() + "\"");
-            });
+            executionAgent.executeLater(
+                    command,
+                    null,
+                    (process) -> {
+                        if (process.exitValue() == 0) {
+                            System.out.println("[INFO] Directory Removed: \"" + directory.getPath() + "\"");
+                        } else {
+                            System.out.println("[ERROR] \"" +
+                                    command[0] +
+                                    "\" terminated unexpectedly, exit code: " +
+                                    process.exitValue()
+                            );
+                        }
+                    });
 
             // execute ASAP
             executionAgent.invokeExecution();
@@ -365,18 +497,30 @@ public class GUI extends JFrame {
 
     /**
      * Resample audios @src -> @dest, to 44100Hz mono.
+     *
      * @src .\dataset_raw
      * @dest .\dataset\44k
      */
     private void resampleAudio() {
         String[] command = {
-                ExecutionAgent.PYTHON_EXE.getAbsolutePath(),
-                ExecutionAgent.RESAMPLER_PY.getAbsolutePath(),
+                PYTHON_EXE.getAbsolutePath(),
+                RESAMPLER_PY.getAbsolutePath(),
         };
 
-        executionAgent.executeLater(command,
-                ExecutionAgent.SO_VITS_SVC_DIR,
-                () -> System.out.println("[INFO] Resampled to 44100Hz mono.")
+        executionAgent.executeLater(
+                command,
+                SO_VITS_SVC_DIR,
+                (process) -> {
+                    if (process.exitValue() == 0) {
+                        System.out.println("[INFO] Resampled to 44100Hz mono.");
+                    } else {
+                        System.out.println("[ERROR] \"" +
+                                RESAMPLER_PY +
+                                "\" terminated unexpectedly, exit code: " +
+                                process.exitValue()
+                        );
+                    }
+                }
         );
         executionAgent.invokeExecution();
     }
@@ -386,8 +530,8 @@ public class GUI extends JFrame {
      */
     private void splitDatasetAndGenerateConfig() {
         List<String> command = new ArrayList<>();
-        command.add(ExecutionAgent.PYTHON_EXE.getAbsolutePath());
-        command.add(ExecutionAgent.FLIST_CONFIGER_PY.getAbsolutePath());
+        command.add(PYTHON_EXE.getAbsolutePath());
+        command.add(FLIST_CONFIGER_PY.getAbsolutePath());
         command.add("--speech_encoder");
         command.add((String) speechEncoderCbBx.getSelectedItem());
         if (loudnessEmbedCkBx.isSelected()) {
@@ -396,8 +540,18 @@ public class GUI extends JFrame {
 
         executionAgent.executeLater(
                 command,
-                ExecutionAgent.SO_VITS_SVC_DIR,
-                () -> System.out.println("[INFO] Training Set, Validation Set, Configuration Files Created.")
+                SO_VITS_SVC_DIR,
+                (process) -> {
+                    if (process.exitValue() == 0) {
+                        System.out.println("[INFO] Training Set, Validation Set, Configuration Files Created.");
+                    } else {
+                        System.out.println("[ERROR] \"" +
+                                FLIST_CONFIGER_PY.getName() +
+                                "\" terminated unexpectedly, exit code: " +
+                                process.exitValue()
+                        );
+                    }
+                }
         );
         executionAgent.invokeExecution();
     }
@@ -407,18 +561,29 @@ public class GUI extends JFrame {
      */
     private void generateHubertAndF0() {
         String[] command = {
-                ExecutionAgent.PYTHON_EXE.getAbsolutePath(),
-                ExecutionAgent.HUBERT_F0_GENERATOR_PY.getAbsolutePath(),
+                PYTHON_EXE.getAbsolutePath(),
+                HUBERT_F0_GENERATOR_PY.getAbsolutePath(),
                 "--f0_predictor",
-                (String) f0PredictorCbBx.getSelectedItem()
+                (String) f0PredictorPreproCbBx.getSelectedItem()
         };
 
-        executionAgent.executeLater(command, ExecutionAgent.SO_VITS_SVC_DIR, () -> {
-            System.out.println("[INFO] Hubert & F0 Predictor Generated.");
-            // enable related interactions after batch execution
-            preprocessBtn.setEnabled(true);
-            clearPreprocessOutDirBtn.setEnabled(true);
-        });
+        executionAgent.executeLater(
+                command,
+                SO_VITS_SVC_DIR,
+                (process) -> {
+                    if (process.exitValue() == 0) {
+                        System.out.println("[INFO] Hubert & F0 Predictor Generated.");
+                    } else {
+                        System.out.println("[ERROR] \"" +
+                                HUBERT_F0_GENERATOR_PY.getName() +
+                                "\" terminated unexpectedly, exit code: " +
+                                process.exitValue()
+                        );
+                    }
+                    // enable related interactions after batch execution
+                    preprocessBtn.setEnabled(true);
+                    clearPreprocessOutDirBtn.setEnabled(true);
+                });
         executionAgent.invokeExecution();
     }
 
@@ -456,7 +621,7 @@ public class GUI extends JFrame {
         trainJsonObject.put("log_interval", (int) logIntervalSpinner.getValue());
         trainJsonObject.put("eval_interval", (int) evalIntervalSpinner.getValue());
         trainJsonObject.put("batch_size", (int) batchSizeSpinner.getValue());
-        if(fp32Btn.isSelected()) {
+        if (fp32Btn.isSelected()) {
             trainJsonObject.put("fp16_run", false);
         } else {
             trainJsonObject.put("fp16_run", true);
@@ -508,6 +673,9 @@ public class GUI extends JFrame {
         allInMemCkBx.setSelected(trainJsonObject.getBoolean("all_in_mem"));
     }
 
+    /**
+     * Display Speaker Names on speakerNameFld
+     */
     private void displaySpeakersName() {
         JSONObject speakerJsonObject = getConfigJsonObject().getJSONObject("spk");
         speakerNameFld.setText(speakerJsonObject.keySet().toString());
@@ -515,23 +683,19 @@ public class GUI extends JFrame {
 
     /**
      * Get Training Config JSONObject.
+     *
      * @return Config JSONObject from TRAINING_CONFIG_LOG if it exists, otherwise from TRAINING_CONFIG.
      */
     private static JSONObject getConfigJsonObject() {
         File loadSource = TRAINING_CONFIG_LOG.exists() ? TRAINING_CONFIG_LOG : TRAINING_CONFIG;
-        StringBuilder configJsonStrBuilder = new StringBuilder();
 
         // Load JSON String from loadSource
-        try (Scanner in = new Scanner(loadSource)) {
-            while (in.hasNext()) {
-                configJsonStrBuilder.append(in.nextLine());
-            }
-        } catch (FileNotFoundException e) {
+        try (BufferedReader in = Files.newBufferedReader(loadSource.toPath())) {
+            // Parse JSON String to JSONObject
+            return new JSONObject(in.lines().reduce("", String::concat));
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-        // Parse JSON String to JSONObject
-        return new JSONObject(configJsonStrBuilder.toString());
     }
 
     /**
@@ -539,31 +703,118 @@ public class GUI extends JFrame {
      */
     private void startTraining() {
         String[] command = {
-                ExecutionAgent.PYTHON_EXE.getAbsolutePath(),
-                ExecutionAgent.TRAIN_PY.getAbsolutePath(),
+                PYTHON_EXE.getAbsolutePath(),
+                TRAIN_PY.getAbsolutePath(),
                 "-c",
                 TRAINING_CONFIG.getAbsolutePath(),
                 "-m",
                 "44k"
         };
 
-        executionAgent.executeLater(command, ExecutionAgent.SO_VITS_SVC_DIR, () -> {
-            startTrainingBtn.setText(TRAINING_BTN_TEXT);
-            clearTrainLogDirBtn.setEnabled(true);
-            System.out.println("[INFO] Training Stopped.");
-        });
+        executionAgent.executeLater(
+                command,
+                SO_VITS_SVC_DIR,
+                (process) -> {
+                    if (process.exitValue() == 0) {
+                        System.out.println("[INFO] Training Complete.");
+                    } else {
+                        System.out.println("[WARNING] \"" +
+                                TRAIN_PY.getName() +
+                                "\" interrupted, exit code: " +
+                                process.exitValue()
+                        );
+                    }
+
+                    startTrainingBtn.setText(TRAINING_BTN_TEXT);
+                    clearTrainLogDirBtn.setEnabled(true);
+                });
+        executionAgent.invokeExecution();
+    }
+
+    /**
+     * Start Inference
+     */
+    private void startInference() {
+        // Get JSON Objects
+        JSONObject configJsonObject = getConfigJsonObject();
+        JSONObject modelJsonObject = configJsonObject.getJSONObject("model");
+
+        // Construct command
+        List<String> command = new ArrayList<>();
+        command.add(PYTHON_EXE.getAbsolutePath());
+        command.add(INFERENCE_PY.getAbsolutePath());
+
+        command.add("--model_path");
+        File[] trainedModels = TRAINING_LOG_DIR_DEFAULT.listFiles((dir, name) ->
+                name.matches(REGEX_TRAINED_MODEL_NAME));
+        assert Objects.requireNonNull(trainedModels).length == 1;
+        command.add(trainedModels[0].getAbsolutePath());
+
+        command.add("--config_path");
+        command.add(TRAINING_CONFIG_LOG.getAbsolutePath());
+
+        command.add("--wav_format");
+        command.add(AUDIO_FILE_OUT_FORMAT);
+
+        command.add("--trans");
+        command.add(String.valueOf(PITCH_SHIFT_INFER_DEFAULT));
+
+        command.add("--spk_list");
+        command.add((String) speakerPickCbBx.getSelectedItem());
+
+        command.add("--clean_names");
+        command.addAll(Arrays.stream(vocalAudioFiles).map(File::getName).toList());
+
+        command.add("--f0_predictor");
+        command.add((String) f0PredictorInferCbBx.getSelectedItem());
+
+        if (nsfHiFiGanCkBx.isSelected()) {
+            command.add("--enhance");
+        }
+
+        // whisper-ppg speech encoder need to set --clip to 25 and -lg to 1
+        if ("whisper-ppg".equals(modelJsonObject.getString("speech_encoder"))) {
+            command.add("--clip");
+            command.add(String.valueOf(25));
+            command.add("-lg");
+            command.add(String.valueOf(1));
+        } else {
+            command.add("--clip");
+            command.add(String.valueOf(CLIP_INFER_DEFAULT));
+        }
+
+        // Schedule inference task
+        executionAgent.executeLater(
+                command,
+                SO_VITS_SVC_DIR,
+                (process) -> {
+                    if (process.exitValue() == 0) {
+                        System.out.println("[INFO] Inference Complete.");
+                        System.out.println("[INFO] Output audios -> \".\\results\"");
+                    } else {
+                        System.out.println("[WARNING] \"" +
+                                INFERENCE_PY.getName() +
+                                "\" interrupted, exit code: " +
+                                process.exitValue()
+                        );
+                    }
+
+                    inferenceBtn.setText(INFERENCE_BTN_TEXT);
+                }
+        );
         executionAgent.invokeExecution();
     }
 
     /**
      * Build & Get GUI Console PrintStream
+     *
      * @return PrintStream to GUI Console
      */
     private PrintStream getPrintStream() {
         OutputStream outGUI = new OutputStream() {
             @Override
             public void write(int b) {
-                updateConsole(String.valueOf((char)b)); // 1 Byte Char only (Unused)
+                updateConsole(String.valueOf((char) b)); // 1 Byte Char only (Unused)
             }
 
             @Override
@@ -576,6 +827,7 @@ public class GUI extends JFrame {
 
     /**
      * Redirect System output & error stream to designated PrintStream(s).
+     *
      * @param out new output stream to be set.
      * @param err new error stream to be set.
      */
@@ -586,6 +838,7 @@ public class GUI extends JFrame {
 
     /**
      * Append output -> console text area.
+     *
      * @param output the text to be displayed in console area.
      */
     private void updateConsole(String output) {

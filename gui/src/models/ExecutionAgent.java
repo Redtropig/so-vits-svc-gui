@@ -2,13 +2,15 @@ package models;
 
 import gui.GUI;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Queue;
-import java.util.Scanner;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.Consumer;
 
 /**
  * Execution Agent
@@ -25,6 +27,7 @@ public class ExecutionAgent {
     public static final File FLIST_CONFIGER_PY = new File(SO_VITS_SVC_DIR + "\\preprocess_flist_config.py");
     public static final File HUBERT_F0_GENERATOR_PY = new File(SO_VITS_SVC_DIR + "\\preprocess_hubert_f0.py");
     public static final File TRAIN_PY = new File(SO_VITS_SVC_DIR + "\\train.py");
+    public static final File INFERENCE_PY = new File(SO_VITS_SVC_DIR + "\\inference_main.py");
 
     private static ExecutionAgent executionAgent;
 
@@ -56,7 +59,7 @@ public class ExecutionAgent {
      * @param afterExecution to run AFTER the command execution.
      * @return true -> task scheduled, false otherwise.
      */
-    public boolean executeLater(List<String> command, File workDirectory, Runnable afterExecution) {
+    public boolean executeLater(List<String> command, File workDirectory, Consumer<Process> afterExecution) {
         if (command.isEmpty()) {
             return false;
         }
@@ -73,11 +76,13 @@ public class ExecutionAgent {
                 // Run the process
                 currentProcess = processBuilder.start();
                 // Schedule after-task execution
-                currentProcess.onExit().thenRun(afterExecution == null ? ()->{} : afterExecution);
+                currentProcess.onExit().thenAccept(afterExecution == null ? (process)->{} : afterExecution);
                 // Redirect process output
-                Scanner in = new Scanner(currentProcess.getInputStream(), GUI.CHARSET_DISPLAY_DEFAULT);
-                while (in.hasNext()) {
-                    System.out.println(in.nextLine());
+                BufferedReader in = new BufferedReader(new InputStreamReader(currentProcess.getInputStream(),
+                        GUI.CHARSET_DISPLAY_DEFAULT));
+                String line;
+                while ((line = in.readLine()) != null) {
+                    System.out.println(line);
                     System.out.flush();
                 }
                 in.close();
@@ -95,7 +100,7 @@ public class ExecutionAgent {
      * @param afterExecution to run AFTER the command execution.
      * @return true -> task scheduled, false otherwise.
      */
-    public boolean executeLater(String[] command, File workDirectory, Runnable afterExecution) {
+    public boolean executeLater(String[] command, File workDirectory, Consumer<Process> afterExecution) {
         return executeLater(Arrays.stream(command).toList(), workDirectory, afterExecution);
     }
 

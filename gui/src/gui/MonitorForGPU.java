@@ -3,9 +3,10 @@ package gui;
 import javax.swing.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Locale;
-import java.util.Scanner;
 
 /**
  * GPU Status Monitor
@@ -51,17 +52,19 @@ public class MonitorForGPU extends JFrame {
                         Process gpuQuery = gpuQueryBuilder.start();
 
                         // get new GPU-status
-                        StringBuilder outBuffer = new StringBuilder();
-                        Scanner in = new Scanner(gpuQuery.getInputStream(), GUI.CHARSET_DISPLAY_DEFAULT);
-                        while (in.hasNext()) {
-                            outBuffer.append(in.nextLine()).append('\n');
+                        StringBuilder displayBuffer = new StringBuilder();
+                        BufferedReader in = new BufferedReader(new InputStreamReader(gpuQuery.getInputStream(),
+                                GUI.CHARSET_DISPLAY_DEFAULT));
+                        String line;
+                        while ((line = in.readLine()) != null) {
+                            displayBuffer.append(line).append('\n');
                         }
                         in.close();
 
                         // update display area
                         int selectionStart = displayArea.getSelectionStart();
                         int selectionEnd = displayArea.getSelectionEnd();
-                        displayArea.setText(outBuffer.toString());
+                        displayArea.setText(displayBuffer.toString());
                         displayArea.setSelectionStart(selectionStart);
                         displayArea.setSelectionEnd(selectionEnd);
 

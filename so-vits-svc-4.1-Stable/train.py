@@ -2,7 +2,6 @@ import logging
 import multiprocessing
 import os
 import time
-
 import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
@@ -41,8 +40,11 @@ def main():
     os.environ['MASTER_ADDR'] = 'localhost'
     os.environ['MASTER_PORT'] = hps.train.port
 
-    mp.spawn(run, nprocs=n_gpus, args=(n_gpus, hps,))
-
+    try:
+        mp.spawn(run, nprocs=n_gpus, args=(n_gpus, hps,))
+    except Exception:
+        print("Aborted.")
+        exit(1)
 
 def run(rank, n_gpus, hps):
     global global_step

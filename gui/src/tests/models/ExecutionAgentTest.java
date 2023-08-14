@@ -27,7 +27,7 @@ class ExecutionAgentTest {
 
     @Test
     void executeLaterScheduleTest() {
-        String[] command = {"ping", "127.0.0.1"};
+        String[] command = {"help"};
 
         Assertions.assertTrue(executionAgent.executeLater(Arrays.stream(command).toList(), null, null));
         Assertions.assertTrue(executionAgent.executeLater(command, new File("."), null));
@@ -35,7 +35,7 @@ class ExecutionAgentTest {
 
 
     /**
-     * This is a UNSTABLE test that may fail on poor CPU performance allocated to this process
+     * This is a UNSTABLE test that may fail on extremely poor CPU performance allocated to this process
      */
     @Test
     void invokeExecutionTest() throws InterruptedException {
@@ -43,8 +43,8 @@ class ExecutionAgentTest {
         AtomicBoolean valid1 = new AtomicBoolean(false);
         AtomicBoolean valid2 = new AtomicBoolean(false);
 
-        executionAgent.executeLater(command, null, () -> valid1.set(true));
-        executionAgent.executeLater(command, null, () -> valid2.set(true));
+        executionAgent.executeLater(command, null, (p) -> valid1.set(true));
+        executionAgent.executeLater(command, null, (p) -> valid2.set(true));
 
         // wait for no execution occur
         Thread.sleep(100);

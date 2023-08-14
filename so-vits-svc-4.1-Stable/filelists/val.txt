@@ -1,6 +1,6 @@
-./dataset/44k/LuoLian/HappyH_4_HuoLian_18.wav
-./dataset/44k/LuoLian/HappyH_4_HuoLian_24.wav
-./dataset/44k/ChangGe/QH_ChangGe_9.wav
-./dataset/44k/QiXuan/QH_QiXuan_0.wav
-./dataset/44k/ChangGe/QH_ChangGe_1.wav
-./dataset/44k/QiXuan/QH_QiXuan_1.wav
+./dataset/44k/QX/QH_ChangGe_8.wav
+./dataset/44k/default-speaker/HappyH_4_HuoLian_9.wav
+./dataset/44k/default-speaker/HappyH_4_HuoLian_11.wav
+./dataset/44k/QX/QH_ChangGe_5.wav
+./dataset/44k/HL/HappyH_4_HuoLian_21.wav
+./dataset/44k/HL/HappyH_4_HuoLian_4.wav
