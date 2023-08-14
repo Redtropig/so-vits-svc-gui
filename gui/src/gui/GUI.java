@@ -7,6 +7,8 @@ import javax.swing.*;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -134,6 +136,18 @@ public class GUI extends JFrame {
         /* Components */
         createUIComponents();
         setContentPane(mainPanel);
+
+        // Kill all sub-processes on Frame closing
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                Process currentProcess = executionAgent.getCurrentProcess();
+                if (currentProcess != null) {
+                    currentProcess.descendants().forEach(ProcessHandle::destroy);
+                    currentProcess.destroy();
+                }
+            }
+        });
 
         pack();
     }

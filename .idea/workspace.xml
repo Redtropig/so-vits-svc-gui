@@ -9,8 +9,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7fb02174-3f4b-4c79-8849-a38c17ff3a31" name="Changes" comment="Minor bug fixed.">
+    <list default="true" id="7fb02174-3f4b-4c79-8849-a38c17ff3a31" name="Changes" comment="readme.md updated.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/src/gui/GUI.java" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/gui/GUI.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/configs/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/configs/config.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/filelists/train.txt" beforeDir="false" afterPath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/filelists/train.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/filelists/val.txt" beforeDir="false" afterPath="$PROJECT_DIR$/so-vits-svc-4.1-Stable/filelists/val.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -176,7 +180,15 @@
       <option name="project" value="LOCAL" />
       <updated>1692036799286</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="readme.md updated.">
+      <option name="closed" value="true" />
+      <created>1692039806620</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1692039806620</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -197,7 +209,8 @@
     <MESSAGE value="User-GUI interaction improved.&#10;Components now behave more reasonably when dealing with invalid user inputs." />
     <MESSAGE value="Inference Area Design done.&#10;Now it is fully functional with the normal usage workflow.&#10;1st Design-Period completed." />
     <MESSAGE value="Minor bug fixed." />
-    <option name="LAST_COMMIT_MESSAGE" value="Minor bug fixed." />
+    <MESSAGE value="readme.md updated." />
+    <option name="LAST_COMMIT_MESSAGE" value="readme.md updated." />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
   <component name="XDebuggerManager">
