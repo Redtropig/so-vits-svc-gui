@@ -204,6 +204,7 @@ public class GUI extends JFrame {
                 speakerName = SPEAKER_NAME_DEFAULT;
             }
 
+            System.out.println("[INFO] Slicing Audio(s)...");
             // disable related interactions before slicing
             voiceSlicerBtn.setEnabled(false);
             clearSliceOutDirBtn.setEnabled(false);
@@ -240,11 +241,13 @@ public class GUI extends JFrame {
                             }
 
                             if (finalI == 0) {
+                                System.out.println("[INFO] All Slicing Done.");
                                 // enable related interactions after batch execution
                                 voiceSlicerBtn.setEnabled(true);
                                 clearSliceOutDirBtn.setEnabled(true);
                             }
-                        });
+                        }
+                );
             }
 
             // execute ASAP
@@ -295,6 +298,7 @@ public class GUI extends JFrame {
                 return;
             }
 
+            System.out.println("[INFO] Preprocessing Dataset...");
             // disable related interactions before preprocess
             preprocessBtn.setEnabled(false);
             clearPreprocessOutDirBtn.setEnabled(false);
@@ -594,6 +598,8 @@ public class GUI extends JFrame {
                                 process.exitValue()
                         );
                     }
+
+                    System.out.println("[INFO] Preprocessing Done.");
                     // enable related interactions after batch execution
                     preprocessBtn.setEnabled(true);
                     clearPreprocessOutDirBtn.setEnabled(true);
@@ -717,6 +723,7 @@ public class GUI extends JFrame {
      */
     private void startTraining() {
         String[] command = {
+                "CUDA_VISIBLE_DEVICES=" + (int) gpuIdSpinner.getValue(),
                 PYTHON_EXE.getAbsolutePath(),
                 TRAIN_PY.getAbsolutePath(),
                 "-c",
@@ -755,6 +762,7 @@ public class GUI extends JFrame {
 
         // Construct command
         List<String> command = new ArrayList<>();
+        command.add("CUDA_VISIBLE_DEVICES=" + (int) gpuIdSpinner.getValue());
         command.add(PYTHON_EXE.getAbsolutePath());
         command.add(INFERENCE_PY.getAbsolutePath());
 
