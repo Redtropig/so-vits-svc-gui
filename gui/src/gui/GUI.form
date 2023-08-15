@@ -47,7 +47,6 @@
                 <properties>
                   <focusable value="false"/>
                   <text value="Browse"/>
-                  <toolTipText value=""/>
                 </properties>
               </component>
               <component id="f383" class="javax.swing.JLabel">
@@ -633,7 +632,6 @@
                     <properties>
                       <focusable value="false"/>
                       <text value="Browse"/>
-                      <toolTipText value=""/>
                     </properties>
                   </component>
                   <component id="9623d" class="javax.swing.JLabel">
