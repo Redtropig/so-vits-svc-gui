@@ -9,7 +9,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7fb02174-3f4b-4c79-8849-a38c17ff3a31" name="Changes" comment="New feature enabled: pick a Graphic Card by GPU-ID for training &amp; inference." />
+    <list default="true" id="7fb02174-3f4b-4c79-8849-a38c17ff3a31" name="Changes" comment="Crash Fixed.">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/src/gui/GUI.form" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/gui/GUI.form" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/src/gui/GUI.java" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/gui/GUI.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -34,7 +38,7 @@
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
-    <option name="RESET_MODE" value="HARD" />
+    <option name="RESET_MODE" value="SOFT" />
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
@@ -117,9 +121,9 @@
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.Main" />
         <item itemvalue="JUnit.ExecutionAgentTest.invokeExecutionTest" />
         <item itemvalue="JUnit.ExecutionAgentTest" />
-        <item itemvalue="Application.Main" />
         <item itemvalue="Application.Main" />
         <item itemvalue="JUnit.ExecutionAgentTest" />
       </list>
@@ -206,7 +210,15 @@
       <option name="project" value="LOCAL" />
       <updated>1692137238546</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="Crash Fixed.">
+      <option name="closed" value="true" />
+      <created>1692140318084</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1692140318084</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -230,7 +242,8 @@
     <MESSAGE value="readme.md updated." />
     <MESSAGE value="Fixed: Abort all sub-processes on GUI Frame closing. (do not &quot;release&quot; sub-processes as unhandled)" />
     <MESSAGE value="New feature enabled: pick a Graphic Card by GPU-ID for training &amp; inference." />
-    <option name="LAST_COMMIT_MESSAGE" value="New feature enabled: pick a Graphic Card by GPU-ID for training &amp; inference." />
+    <MESSAGE value="Crash Fixed." />
+    <option name="LAST_COMMIT_MESSAGE" value="Crash Fixed." />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
   <component name="XDebuggerManager">

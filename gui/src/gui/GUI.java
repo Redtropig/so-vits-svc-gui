@@ -175,6 +175,7 @@ public class GUI extends JFrame {
                 voiceAudioFiles = voiceFileChooser.getSelectedFiles();
 
                 // Update file-chosen text field
+                voiceChosenFld.setEnabled(true);
                 voiceChosenFld.setText(String.join(";", Arrays.stream(voiceAudioFiles).map(File::getName).toList()));
             }
         });
@@ -403,6 +404,7 @@ public class GUI extends JFrame {
                 vocalAudioFiles = vocalFileChooser.getSelectedFiles();
 
                 // Update file-chosen text field
+                vocalChosenFld.setEnabled(true);
                 vocalChosenFld.setText(String.join(";", Arrays.stream(vocalAudioFiles).map(File::getName).toList()));
 
                 // Copy vocal files into INFERENCE_INPUT_DIR_DEFAULT
@@ -838,7 +840,8 @@ public class GUI extends JFrame {
 
                     // reset Inference State -> Vacant
                     vocalAudioFiles = null;
-                    vocalChosenFld.setText("");
+                    vocalChosenFld.setEnabled(false);
+                    vocalChosenFld.setText("File name(s) should be in English");
                     speakerPickCbBx.setEnabled(false);
                     speakerPickCbBx.removeAllItems();
                     inferenceBtn.setText(INFERENCE_BTN_TEXT);

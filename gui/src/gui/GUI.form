@@ -35,7 +35,9 @@
                 </constraints>
                 <properties>
                   <editable value="false"/>
+                  <enabled value="false"/>
                   <focusable value="false"/>
+                  <text value="File name(s) should be in English"/>
                 </properties>
               </component>
               <component id="fe2e2" class="javax.swing.JButton" binding="voiceFileChooserBtn">
@@ -45,7 +47,7 @@
                 <properties>
                   <focusable value="false"/>
                   <text value="Browse"/>
-                  <toolTipText value="file name(s) should be in English"/>
+                  <toolTipText value=""/>
                 </properties>
               </component>
               <component id="f383" class="javax.swing.JLabel">
@@ -614,7 +616,9 @@
                     </constraints>
                     <properties>
                       <editable value="false"/>
+                      <enabled value="false"/>
                       <focusable value="false"/>
+                      <text value="File name(s) should be in English"/>
                     </properties>
                   </component>
                   <vspacer id="d07bf">
@@ -629,7 +633,7 @@
                     <properties>
                       <focusable value="false"/>
                       <text value="Browse"/>
-                      <toolTipText value="file name(s) should be in English"/>
+                      <toolTipText value=""/>
                     </properties>
                   </component>
                   <component id="9623d" class="javax.swing.JLabel">
