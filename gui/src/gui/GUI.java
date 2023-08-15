@@ -723,7 +723,11 @@ public class GUI extends JFrame {
      */
     private void startTraining() {
         String[] command = {
+                "cmd.exe",
+                "/c",
+                "set",
                 "CUDA_VISIBLE_DEVICES=" + (int) gpuIdSpinner.getValue(),
+                "&&",
                 PYTHON_EXE.getAbsolutePath(),
                 TRAIN_PY.getAbsolutePath(),
                 "-c",
@@ -762,7 +766,11 @@ public class GUI extends JFrame {
 
         // Construct command
         List<String> command = new ArrayList<>();
+        command.add("cmd.exe");
+        command.add("/c");
+        command.add("set");
         command.add("CUDA_VISIBLE_DEVICES=" + (int) gpuIdSpinner.getValue());
+        command.add("&&");
         command.add(PYTHON_EXE.getAbsolutePath());
         command.add(INFERENCE_PY.getAbsolutePath());
 

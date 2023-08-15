@@ -1,4 +1,2 @@
-./dataset/44k/CG/QH_ChangGe2_8.wav
-./dataset/44k/HL/HappyH_4_HuoLian_9.wav
-./dataset/44k/CG/QH_ChangGe2_6.wav
-./dataset/44k/HL/HappyH_4_HuoLian_15.wav
+./dataset/44k/default-speaker/HappyH_4_HuoLian_16.wav
+./dataset/44k/default-speaker/HappyH_4_HuoLian_24.wav
