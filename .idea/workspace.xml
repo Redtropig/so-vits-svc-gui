@@ -9,7 +9,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7fb02174-3f4b-4c79-8849-a38c17ff3a31" name="Changes" comment="File name textfield place-holder added." />
+    <list default="true" id="7fb02174-3f4b-4c79-8849-a38c17ff3a31" name="Changes" comment="Restored Browse-btn toolTips -&gt; null">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/readme.md" beforeDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -222,7 +225,15 @@
       <option name="project" value="LOCAL" />
       <updated>1692143470339</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="Restored Browse-btn toolTips -&gt; null">
+      <option name="closed" value="true" />
+      <created>1692143649106</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1692143649106</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -248,7 +259,8 @@
     <MESSAGE value="New feature enabled: pick a Graphic Card by GPU-ID for training &amp; inference." />
     <MESSAGE value="Crash Fixed." />
     <MESSAGE value="File name textfield place-holder added." />
-    <option name="LAST_COMMIT_MESSAGE" value="File name textfield place-holder added." />
+    <MESSAGE value="Restored Browse-btn toolTips -&gt; null" />
+    <option name="LAST_COMMIT_MESSAGE" value="Restored Browse-btn toolTips -&gt; null" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
   <component name="XDebuggerManager">
