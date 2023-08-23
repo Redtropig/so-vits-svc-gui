@@ -1,15 +1,19 @@
 package gui;
 
 import models.ExecutionAgent;
+import models.RemoteAgent;
 import org.json.JSONObject;
 
 import javax.swing.*;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.*;
+import java.net.ConnectException;
+import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -114,6 +118,7 @@ public class GUI extends JFrame {
 
     private File[] voiceAudioFiles;
     private File[] vocalAudioFiles;
+    private RemoteAgent remoteAgent;
 
     public GUI() {
 
@@ -153,11 +158,79 @@ public class GUI extends JFrame {
     }
 
     private void createUIComponents() {
+        createMenuBar();
         createDatasetPrepArea();
         createPreprocessArea();
         createTrainingArea();
         createInferenceArea();
         createConsoleArea();
+    }
+
+    private void createMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
+
+        JMenu remoteMenu = new JMenu("Remote");
+        JMenu currentConnection = new JMenu("@localhost");
+
+        /* Remote */
+        JMenuItem connectItm = new JMenuItem("Connect to...", KeyEvent.VK_C);
+        JMenuItem disconnectItm = new JMenuItem("Disconnect", KeyEvent.VK_D);
+        // Connect To
+        connectItm.addActionListener((e) -> {
+            // ip_port[0] -> hostname, ip_port[1] -> port
+            String[] ip_port;
+            try {
+                ip_port = JOptionPane.showInputDialog(
+                        this,
+                        "Connect to <IP:Port>:",
+                        "Connect To...",
+                        JOptionPane.QUESTION_MESSAGE
+                ).split(":", 2);
+            } catch (NullPointerException ex) { // User canceled IP:Port input
+                return;
+            }
+
+            // Connect to Server
+            new Thread(() -> {
+                // parse String[] to InetAddress
+                InetSocketAddress address;
+                try {
+                    address = new InetSocketAddress(ip_port[0], Integer.parseInt(ip_port[1]));
+                    System.out.println("[INFO] Connecting...");
+                    remoteAgent = new RemoteAgent(address);
+                    disconnectItm.setEnabled(true);
+                    currentConnection.setText("@" + remoteAgent.getInetAddress() + ":" + remoteAgent.getPort());
+                    System.out.println("[INFO] Connection Established.");
+                } catch (ConnectException ex) {
+                    System.out.println("[INFO] " + ex.getMessage());
+                } catch (ArrayIndexOutOfBoundsException | IllegalArgumentException | IOException ex) { // Invalid input
+                    System.err.println("[!] Connect: <IP:Port> address invalid.");
+                }
+            }).start();
+        });
+
+        // Disconnect
+        disconnectItm.setEnabled(false);
+        disconnectItm.addActionListener((e) -> {
+            remoteAgent.close();
+            remoteAgent = null;
+            disconnectItm.setEnabled(false);
+            currentConnection.setText("@localhost");
+            System.out.println("[INFO] Disconnected from the server.");
+        });
+
+        remoteMenu.setMnemonic(KeyEvent.VK_R);
+        remoteMenu.add(connectItm);
+        remoteMenu.add(disconnectItm);
+        /* End Remote */
+
+        /* Current Connection */
+        currentConnection.setEnabled(false);
+        /* End Current Connection */
+
+        menuBar.add(remoteMenu);
+        menuBar.add(currentConnection);
+        setJMenuBar(menuBar);
     }
 
     private void createDatasetPrepArea() {
@@ -446,7 +519,7 @@ public class GUI extends JFrame {
         inferenceBtn.addActionListener(e -> {
             // raw: no vocal file is chosen
             if (vocalAudioFiles == null) {
-                System.out.println("[!] Please SELECT at least 1 VOCAL file.");
+                System.err.println("[!] Please SELECT at least 1 VOCAL file.");
                 return;
             }
 
