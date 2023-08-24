@@ -1,6 +1,7 @@
 package gui;
 
 import models.ExecutionAgent;
+import models.FileUsage;
 import models.RemoteAgent;
 import org.json.JSONObject;
 
@@ -112,6 +113,10 @@ public class GUI extends JFrame {
     private JButton vocalChooserBtn;
     private JPanel inferencePanel;
     private JCheckBox nsfHiFiGanCkBx;
+    private JProgressBar currentVoiceFileTransProgress;
+    private JProgressBar totalVoiceFilesTransProgress;
+    private JProgressBar currentVocalFileTransProgress;
+    private JProgressBar totalVocalFilesTransProgress;
     private ButtonGroup floatPrecisionGroup;
 
     private final ExecutionAgent executionAgent;
@@ -278,11 +283,59 @@ public class GUI extends JFrame {
                 speakerName = SPEAKER_NAME_DEFAULT;
             }
 
-            System.out.println("[INFO] Slicing Audio(s)...");
             // disable related interactions before slicing
             voiceSlicerBtn.setEnabled(false);
             clearSliceOutDirBtn.setEnabled(false);
 
+            /* Connected to Server */
+            if (remoteAgent != null) {
+
+                // Transfer voice files
+                new SwingWorker<Void, Integer>() {
+                    @Override
+                    protected Void doInBackground() throws IOException {
+                        System.out.println("[INFO] Uploading Voice File(s)...");
+                        totalVoiceFilesTransProgress.setMaximum(voiceAudioFiles.length);
+                        totalVoiceFilesTransProgress.setString("0/" + totalVoiceFilesTransProgress.getMaximum());
+
+                        for (int i = 0; i < voiceAudioFiles.length; ) {
+                            remoteAgent.transferFileToServer(
+                                    FileUsage.TO_SLICE,
+                                    voiceAudioFiles[i],
+                                    currentVoiceFileTransProgress
+                            );
+                            publish(++i);
+                        }
+
+                        done();
+                        return null;
+                    }
+
+                    @Override
+                    protected void process(List<Integer> completedCount) {
+                        totalVoiceFilesTransProgress.setValue(completedCount.get(completedCount.size() - 1));
+                        totalVoiceFilesTransProgress.setString(
+                                completedCount + "/" + totalVoiceFilesTransProgress.getMaximum()
+                        );
+                    }
+
+                    @Override
+                    protected void done() {
+                        System.out.println("[INFO] All Voice File(s) are Uploaded to Server.");
+                    }
+                }.execute();
+
+                // Slice on Server
+                // TODO
+
+
+                // enable related interactions after batch execution
+                voiceSlicerBtn.setEnabled(true);
+                clearSliceOutDirBtn.setEnabled(true);
+            }
+            /* End Connected to Server */
+
+            System.out.println("[INFO] Slicing Audio(s)...");
             // slice each voice file
             for (int i = voiceAudioFiles.length - 1; i >= 0; i--) {
                 File voiceFile = voiceAudioFiles[i];
@@ -293,7 +346,7 @@ public class GUI extends JFrame {
                         SLICER_PY.getAbsolutePath(),
                         voiceFile.getPath(),
                         "--out",
-                        sliceOutDirFld.getText() + "/" + speakerName,
+                        sliceOutDirFld.getText() + "\\" + speakerName,
                         "--min_interval",
                         String.valueOf(SLICING_MIN_INTERVAL_DEFAULT)
                 };
