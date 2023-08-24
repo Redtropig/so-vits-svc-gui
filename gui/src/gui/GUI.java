@@ -118,6 +118,11 @@ public class GUI extends JFrame {
     private JProgressBar currentVocalFileTransProgress;
     private JProgressBar totalVocalFilesTransProgress;
     private ButtonGroup floatPrecisionGroup;
+    private JMenuItem connectItm;
+    private JMenuItem disconnectItm;
+    private JMenuBar menuBar;
+    private JMenu remoteMenu;
+    private JMenu currentConnection;
 
     private final ExecutionAgent executionAgent;
 
@@ -172,14 +177,14 @@ public class GUI extends JFrame {
     }
 
     private void createMenuBar() {
-        JMenuBar menuBar = new JMenuBar();
+        menuBar = new JMenuBar();
 
-        JMenu remoteMenu = new JMenu("Remote");
-        JMenu currentConnection = new JMenu("@localhost");
+        remoteMenu = new JMenu("Remote");
+        currentConnection = new JMenu("@localhost");
 
         /* Remote */
-        JMenuItem connectItm = new JMenuItem("Connect to...", KeyEvent.VK_C);
-        JMenuItem disconnectItm = new JMenuItem("Disconnect", KeyEvent.VK_D);
+        connectItm = new JMenuItem("Connect to...", KeyEvent.VK_C);
+        disconnectItm = new JMenuItem("Disconnect", KeyEvent.VK_D);
         // Connect To
         connectItm.addActionListener((e) -> {
             // ip_port[0] -> hostname, ip_port[1] -> port
@@ -219,9 +224,7 @@ public class GUI extends JFrame {
         disconnectItm.addActionListener((e) -> {
             remoteAgent.close();
             remoteAgent = null;
-            disconnectItm.setEnabled(false);
-            currentConnection.setText("@localhost");
-            System.out.println("[INFO] Disconnected from the server.");
+            restoreDisconnectedState();
         });
 
         remoteMenu.setMnemonic(KeyEvent.VK_R);
@@ -289,7 +292,15 @@ public class GUI extends JFrame {
 
             /* Connected to Server */
             if (remoteAgent != null) {
-
+                remoteAgent = remoteAgent.echoIfAlive();
+                if (remoteAgent == null) {
+                    restoreDisconnectedState();
+                    // enable related interactions
+                    voiceSlicerBtn.setEnabled(true);
+                    clearSliceOutDirBtn.setEnabled(true);
+                    return;
+                }
+                
                 // Transfer voice files
                 new SwingWorker<Void, Integer>() {
                     @Override
@@ -307,7 +318,6 @@ public class GUI extends JFrame {
                             publish(++i);
                         }
 
-                        done();
                         return null;
                     }
 
@@ -315,12 +325,15 @@ public class GUI extends JFrame {
                     protected void process(List<Integer> completedCount) {
                         totalVoiceFilesTransProgress.setValue(completedCount.get(completedCount.size() - 1));
                         totalVoiceFilesTransProgress.setString(
-                                completedCount + "/" + totalVoiceFilesTransProgress.getMaximum()
+                                totalVoiceFilesTransProgress.getValue() +"/"+ totalVoiceFilesTransProgress.getMaximum()
                         );
                     }
 
                     @Override
                     protected void done() {
+                        if (isCancelled()) {
+                            return;
+                        }
                         System.out.println("[INFO] All Voice File(s) are Uploaded to Server.");
                     }
                 }.execute();
@@ -328,10 +341,11 @@ public class GUI extends JFrame {
                 // Slice on Server
                 // TODO
 
+//                // enable related interactions after batch execution
+//                voiceSlicerBtn.setEnabled(true);
+//                clearSliceOutDirBtn.setEnabled(true);
 
-                // enable related interactions after batch execution
-                voiceSlicerBtn.setEnabled(true);
-                clearSliceOutDirBtn.setEnabled(true);
+                return;
             }
             /* End Connected to Server */
 
@@ -974,6 +988,15 @@ public class GUI extends JFrame {
                 }
         );
         executionAgent.invokeExecution();
+    }
+
+    /**
+     * Update/Restore GUI components to disconnected state.
+     */
+    private void restoreDisconnectedState() {
+        disconnectItm.setEnabled(false);
+        currentConnection.setText("@localhost");
+        System.out.println("[INFO] Disconnected from the server.");
     }
 
     /**

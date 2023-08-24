@@ -81,6 +81,13 @@ public class RemoteAgent {
     public int getPort() {
         return controlSocket.getPort();
     }
+    /**
+     * Echo this RemoteAgent reference if its connection is currently alive.
+     * @return this RemoteAgent if its connection is still alive, otherwise null.
+     */
+    public RemoteAgent echoIfAlive() {
+        return controlSocket.isClosed()? null : this;
+    }
     private InputStream getInputStream() {
         try {
             return controlSocket.getInputStream();
