@@ -152,7 +152,7 @@ public class GUI extends JFrame {
         createUIComponents();
         setContentPane(mainPanel);
 
-        // Kill all sub-processes on Frame closing
+        // Kill all sub-processes & Disconnect from Server on Frame closing
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -160,6 +160,9 @@ public class GUI extends JFrame {
                 if (currentProcess != null) {
                     currentProcess.descendants().forEach(ProcessHandle::destroy);
                     currentProcess.destroy();
+                }
+                if (remoteAgent != null) {
+                    remoteAgent.close();
                 }
             }
         });
@@ -223,8 +226,8 @@ public class GUI extends JFrame {
         disconnectItm.setEnabled(false);
         disconnectItm.addActionListener((e) -> {
             remoteAgent.close();
-            remoteAgent = null;
             restoreDisconnectedState();
+            System.out.println("[INFO] Disconnected from the server.");
         });
 
         remoteMenu.setMnemonic(KeyEvent.VK_R);
@@ -292,31 +295,42 @@ public class GUI extends JFrame {
 
             /* Connected to Server */
             if (remoteAgent != null) {
-                remoteAgent = remoteAgent.echoIfAlive();
-                if (remoteAgent == null) {
-                    restoreDisconnectedState();
-                    // enable related interactions
-                    voiceSlicerBtn.setEnabled(true);
-                    clearSliceOutDirBtn.setEnabled(true);
-                    return;
-                }
-                
-                // Transfer voice files
+
                 new SwingWorker<Void, Integer>() {
                     @Override
-                    protected Void doInBackground() throws IOException {
+                    protected Void doInBackground() throws InterruptedException {
+                        /* Transfer voice files */
                         System.out.println("[INFO] Uploading Voice File(s)...");
                         totalVoiceFilesTransProgress.setMaximum(voiceAudioFiles.length);
+                        totalVoiceFilesTransProgress.setValue(0);
                         totalVoiceFilesTransProgress.setString("0/" + totalVoiceFilesTransProgress.getMaximum());
 
-                        for (int i = 0; i < voiceAudioFiles.length; ) {
-                            remoteAgent.transferFileToServer(
-                                    FileUsage.TO_SLICE,
-                                    voiceAudioFiles[i],
-                                    currentVoiceFileTransProgress
-                            );
+                        for (int i = 0; i < voiceAudioFiles.length; Thread.sleep(RemoteAgent.FILE_TRANSFER_INTERVAL)) {
+                            try {
+                                remoteAgent.transferFileToServer(
+                                        FileUsage.TO_SLICE,
+                                        voiceAudioFiles[i],
+                                        currentVoiceFileTransProgress
+                                );
+                            } catch (IOException ex) {
+                                restoreDisconnectedState();
+                                System.err.println("[ERROR] Failed to Upload File(s), please Check the Connection.");
+                                // enable related interactions
+                                voiceSlicerBtn.setEnabled(true);
+                                clearSliceOutDirBtn.setEnabled(true);
+                                return null;
+                            }
                             publish(++i);
                         }
+                        System.out.println("[INFO] All Voice File(s) are Uploaded to Server.");
+                        /* End Transfer voice files */
+
+                        /* Slice on Server */
+                        // TODO
+                        // enable related interactions
+                        voiceSlicerBtn.setEnabled(true);
+                        clearSliceOutDirBtn.setEnabled(true);
+                        /* End Slice on Server */
 
                         return null;
                     }
@@ -328,22 +342,7 @@ public class GUI extends JFrame {
                                 totalVoiceFilesTransProgress.getValue() +"/"+ totalVoiceFilesTransProgress.getMaximum()
                         );
                     }
-
-                    @Override
-                    protected void done() {
-                        if (isCancelled()) {
-                            return;
-                        }
-                        System.out.println("[INFO] All Voice File(s) are Uploaded to Server.");
-                    }
                 }.execute();
-
-                // Slice on Server
-                // TODO
-
-//                // enable related interactions after batch execution
-//                voiceSlicerBtn.setEnabled(true);
-//                clearSliceOutDirBtn.setEnabled(true);
 
                 return;
             }
@@ -991,12 +990,12 @@ public class GUI extends JFrame {
     }
 
     /**
-     * Update/Restore GUI components to disconnected state.
+     * Update/Restore GUI to disconnected state.
      */
     private void restoreDisconnectedState() {
+        remoteAgent = null;
         disconnectItm.setEnabled(false);
         currentConnection.setText("@localhost");
-        System.out.println("[INFO] Disconnected from the server.");
     }
 
     /**

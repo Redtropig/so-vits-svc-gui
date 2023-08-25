@@ -13,9 +13,10 @@ import java.net.Socket;
 public class RemoteAgent {
 
     private static final int FILE_TRANSFER_FRAGMENT_SIZE = 1024; // bytes
-    private static final int FILE_TRANSFER_SOCKET_PORT = 23333;
+    private static final int FILE_TRANSFER_SERVER_PORT = 23333;
+    public static final int FILE_TRANSFER_INTERVAL = 1; // ms
 
-    private Socket controlSocket;
+    private final Socket controlSocket;
 
     public RemoteAgent(InetSocketAddress address) throws IOException {
         controlSocket = new Socket(address.getAddress(), address.getPort());
@@ -30,8 +31,6 @@ public class RemoteAgent {
             controlSocket.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
-        } finally {
-            controlSocket = null;
         }
     }
 
@@ -42,12 +41,13 @@ public class RemoteAgent {
      * @param progressBar JProgressBar to be updated.
      */
     public synchronized void transferFileToServer(FileUsage usage, File file, JProgressBar progressBar) throws IOException {
-        Socket fileTransferSocket = new Socket(controlSocket.getInetAddress(), FILE_TRANSFER_SOCKET_PORT);
+
+        Socket fileTransferSocket = new Socket(controlSocket.getInetAddress(), FILE_TRANSFER_SERVER_PORT);
         DataOutputStream serverOutputStream = new DataOutputStream(fileTransferSocket.getOutputStream());
 
-        // Notify server Instruction & FileUsage
-        serverOutputStream.writeUTF(Instruction.TRANSFER.name());
+        // Notify server InstructionType & FileUsage
         serverOutputStream.writeUTF(usage.name());
+        serverOutputStream.writeUTF(file.getName());
         serverOutputStream.flush();
 
         // Transfer File

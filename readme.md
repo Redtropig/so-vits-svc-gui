@@ -21,6 +21,7 @@ This project was designed to alleviate the difficulties & confusion for non-CS-r
 - Be able to interact with GUI while Background Tasks are running, and GUI quickly responds.
 - Be able to schedule Tasks and execute them later by the time order as the order they were added.
 - Be able to process Multiple Files in a batch at one time.
+- Be able to connect to [so-vits-svc-server](https://github.com/Redtropig/so-vits-svc-server) as Client.
 - When invalid inputs happen accidentally, there should be neither fatal error nor file-system destruction occurs, and the program should show its robustness that immediately restores into a Valid/Safe STATE.
 
 ### **References**
