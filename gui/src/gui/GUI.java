@@ -407,6 +407,19 @@ public class GUI extends JFrame {
 
         /* Slice Out Dir Cleaner */
         clearSliceOutDirBtn.addActionListener(e -> {
+            /* Connected to Server */
+            if (remoteAgent != null) {
+                new SwingWorker<Void, Integer>() {
+                    @Override
+                    protected Void doInBackground() {
+                        sendClearInstruction(InstructionType.SLICE);
+                        return null;
+                    }
+                }.execute();
+                return;
+            }
+            /* End Connected to Server */
+
             for (File subDir : Objects.requireNonNull(SLICING_OUT_DIR_DEFAULT.listFiles(File::isDirectory))) {
                 removeDirectory(subDir);
             }
@@ -461,6 +474,19 @@ public class GUI extends JFrame {
 
         /* Preprocess Out Dir Cleaner */
         clearPreprocessOutDirBtn.addActionListener(e -> {
+            /* Connected to Server */
+            if (remoteAgent != null) {
+                new SwingWorker<Void, Integer>() {
+                    @Override
+                    protected Void doInBackground() {
+                        sendClearInstruction(InstructionType.PREPROCESS);
+                        return null;
+                    }
+                }.execute();
+                return;
+            }
+            /* End Connected to Server */
+
             for (File subDir : Objects.requireNonNull(PREPROCESS_OUT_DIR_DEFAULT.listFiles(File::isDirectory))) {
                 removeDirectory(subDir);
             }
@@ -525,6 +551,19 @@ public class GUI extends JFrame {
 
         /* Train Log Cleaner */
         clearTrainLogDirBtn.addActionListener(e -> {
+            /* Connected to Server */
+            if (remoteAgent != null) {
+                new SwingWorker<Void, Integer>() {
+                    @Override
+                    protected Void doInBackground() {
+                        sendClearInstruction(InstructionType.TRAIN);
+                        return null;
+                    }
+                }.execute();
+                return;
+            }
+            /* End Connected to Server */
+
             for (File subFile : Objects.requireNonNull(TRAINING_LOG_DIR_DEFAULT.listFiles((f) ->
                     !(f.getName().equals("diffusion") ||
                             f.getName().equals("D_0.pth") ||
@@ -1007,6 +1046,24 @@ public class GUI extends JFrame {
         remoteAgent = null;
         disconnectItm.setEnabled(false);
         currentConnection.setText("@localhost");
+    }
+
+    /**
+     * Send clear Instruction, targeted on designated type of Instruction's output directory.
+     * @param type states which type of Instruction's output directory to be cleared
+     */
+    private void sendClearInstruction(InstructionType type) {
+        // Construct Instruction
+        JSONObject instruction = new JSONObject();
+        instruction.put("INSTRUCTION", InstructionType.CLEAR.name());
+        instruction.put("dir", type.name().toLowerCase());
+
+        // Execute Instruction on Server
+        try {
+            remoteAgent.executeInstructionOnServer(instruction);
+        } catch (IOException ex) {
+            System.err.println("[ERROR] Failed to Clear " + type + " Output Directory.");
+        }
     }
 
     /**
