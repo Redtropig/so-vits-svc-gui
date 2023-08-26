@@ -5,8 +5,13 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.Socket;
 import java.util.Locale;
+
+import static gui.GUI.ICON_PATH;
+import static gui.GUI.remoteAgent;
 
 /**
  * GPU Status Monitor
@@ -14,6 +19,7 @@ import java.util.Locale;
  */
 public class MonitorForGPU extends JFrame {
     private static final String FRAME_TITLE = "GPU Monitor";
+    private static final int GPU_STATUS_SERVER_PORT = 3687;
     private static final long REFRESH_INTERVAL = 1000; // ms
 
     private JTextArea displayArea;
@@ -29,7 +35,7 @@ public class MonitorForGPU extends JFrame {
         /* UI Frame Settings */
         setTitle(FRAME_TITLE);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        setIconImage(new ImageIcon(GUI.ICON_PATH).getImage());
+        setIconImage(new ImageIcon(ICON_PATH).getImage());
         setResizable(false);
         setVisible(true);
         setContentPane(monitorPanel);
@@ -45,21 +51,36 @@ public class MonitorForGPU extends JFrame {
         ProcessBuilder gpuQueryBuilder = new ProcessBuilder("nvidia-smi.exe");
 
         autoRefresh = new Thread(() -> {
+            // Refresh Loop
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     // At Foreground
                     if (isShowing()) {
-                        Process gpuQuery = gpuQueryBuilder.start();
+                        Process gpuQuery;
+                        Socket gpuSocket = null;
+                        InputStream gpuStatusInputStream;
+
+                        // Connected to Server?
+                        if (remoteAgent != null) {
+                            gpuSocket = new Socket(remoteAgent.getInetAddress(), GPU_STATUS_SERVER_PORT);
+                            gpuStatusInputStream = gpuSocket.getInputStream();
+                        } else {
+                            gpuQuery = gpuQueryBuilder.start();
+                            gpuStatusInputStream = gpuQuery.getInputStream();
+                        }
 
                         // get new GPU-status
                         StringBuilder displayBuffer = new StringBuilder();
-                        BufferedReader in = new BufferedReader(new InputStreamReader(gpuQuery.getInputStream(),
+                        BufferedReader in = new BufferedReader(new InputStreamReader(gpuStatusInputStream,
                                 GUI.CHARSET_DISPLAY_DEFAULT));
                         String line;
                         while ((line = in.readLine()) != null) {
                             displayBuffer.append(line).append('\n');
                         }
-                        in.close();
+                        // End Connection
+                        if (gpuSocket != null) {
+                            gpuSocket.close();
+                        }
 
                         // update display area
                         int selectionStart = displayArea.getSelectionStart();
@@ -74,9 +95,9 @@ public class MonitorForGPU extends JFrame {
                     }
                     // Refresh Interval
                     Thread.sleep(REFRESH_INTERVAL);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                } catch (InterruptedException e) {
+                } catch (IOException ex) {
+                    continue;
+                } catch (InterruptedException ex) {
                     return;
                 }
             }

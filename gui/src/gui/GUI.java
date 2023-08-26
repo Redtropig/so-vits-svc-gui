@@ -129,7 +129,7 @@ public class GUI extends JFrame {
 
     private File[] voiceAudioFiles;
     private File[] vocalAudioFiles;
-    private RemoteAgent remoteAgent;
+    protected static RemoteAgent remoteAgent;
 
     public GUI() {
 
