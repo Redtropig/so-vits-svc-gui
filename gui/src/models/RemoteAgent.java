@@ -73,13 +73,12 @@ public class RemoteAgent {
 
         // Closures
         fileInputStream.close();
-        serverOutputStream.close();
         fileTransferSocket.close();
     }
 
     /**
-     * Transfer a Single Instruction to the Server, and Retrieve Feedback from Server.
-     * @param instruction instruction to be transferred.
+     * Transfer a Single Instruction to the Server, and Retrieve Feedback from the Server.
+     * @param instruction Instruction to be transferred.
      */
     public synchronized void executeInstructionOnServer(JSONObject instruction) throws IOException {
         if (controlSocket.isClosed()) {
@@ -91,7 +90,7 @@ public class RemoteAgent {
         serverOutputStream.writeUTF(instruction.toString());
         serverOutputStream.flush();
 
-        // retrieve feedback from Server
+        // retrieve Feedback from Server
         BufferedReader in = new BufferedReader(new InputStreamReader(controlSocket.getInputStream(),
                 GUI.CHARSET_DISPLAY_DEFAULT));
         String line;
