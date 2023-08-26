@@ -2,6 +2,7 @@ package gui;
 
 import models.ExecutionAgent;
 import models.FileUsage;
+import models.InstructionType;
 import models.RemoteAgent;
 import org.json.JSONObject;
 
@@ -296,9 +297,11 @@ public class GUI extends JFrame {
             /* Connected to Server */
             if (remoteAgent != null) {
 
+                // Slice Worker
+                final String finalSpeakerName = speakerName;
                 new SwingWorker<Void, Integer>() {
                     @Override
-                    protected Void doInBackground() throws InterruptedException {
+                    protected Void doInBackground() throws InterruptedException, IOException {
                         /* Transfer voice files */
                         System.out.println("[INFO] Uploading Voice File(s)...");
                         totalVoiceFilesTransProgress.setMaximum(voiceAudioFiles.length);
@@ -326,7 +329,15 @@ public class GUI extends JFrame {
                         /* End Transfer voice files */
 
                         /* Slice on Server */
-                        // TODO
+                        // Construct Instruction
+                        JSONObject instruction = new JSONObject();
+                        instruction.put("INSTRUCTION", InstructionType.SLICE.name());
+                        instruction.put("spk", finalSpeakerName);
+                        instruction.put("min_interval", SLICING_MIN_INTERVAL_DEFAULT);
+
+                        // Execute Instruction on Server
+                        remoteAgent.executeInstructionOnServer(instruction);
+
                         // enable related interactions
                         voiceSlicerBtn.setEnabled(true);
                         clearSliceOutDirBtn.setEnabled(true);

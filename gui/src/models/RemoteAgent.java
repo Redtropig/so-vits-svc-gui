@@ -1,5 +1,8 @@
 package models;
 
+import gui.GUI;
+import org.json.JSONObject;
+
 import javax.swing.*;
 import java.io.*;
 import java.net.InetAddress;
@@ -16,7 +19,7 @@ public class RemoteAgent {
     private static final int FILE_TRANSFER_SERVER_PORT = 23333;
     public static final int FILE_TRANSFER_INTERVAL = 1; // ms
 
-    private final Socket controlSocket;
+    private Socket controlSocket;
 
     public RemoteAgent(InetSocketAddress address) throws IOException {
         controlSocket = new Socket(address.getAddress(), address.getPort());
@@ -72,6 +75,31 @@ public class RemoteAgent {
         fileInputStream.close();
         serverOutputStream.close();
         fileTransferSocket.close();
+    }
+
+    /**
+     * Transfer a Single Instruction to the Server, and Retrieve Feedback from Server.
+     * @param instruction instruction to be transferred.
+     */
+    public synchronized void executeInstructionOnServer(JSONObject instruction) throws IOException {
+        if (controlSocket.isClosed()) {
+            controlSocket = new Socket(controlSocket.getInetAddress(), getPort());
+        }
+        DataOutputStream serverOutputStream = new DataOutputStream(controlSocket.getOutputStream());
+
+        // send Instruction
+        serverOutputStream.writeUTF(instruction.toString());
+        serverOutputStream.flush();
+
+        // retrieve feedback from Server
+        BufferedReader in = new BufferedReader(new InputStreamReader(controlSocket.getInputStream(),
+                GUI.CHARSET_DISPLAY_DEFAULT));
+        String line;
+        while ((line = in.readLine()) != null) {
+            System.out.println(line);
+            System.out.flush();
+        }
+        controlSocket.close();
     }
 
     /* Getters */

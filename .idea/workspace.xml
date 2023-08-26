@@ -11,11 +11,8 @@
   <component name="ChangeListManager">
     <list default="true" id="7fb02174-3f4b-4c79-8849-a38c17ff3a31" name="Changes" comment="New feature: File can be transferred to Server.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gui/src/gui/GUI.form" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/gui/GUI.form" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/gui/src/gui/GUI.java" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/gui/GUI.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gui/src/models/Instruction.java" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/models/InstructionType.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/gui/src/models/RemoteAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/models/RemoteAgent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/readme.md" beforeDir="false" afterPath="$PROJECT_DIR$/readme.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -268,7 +265,15 @@
       <option name="project" value="LOCAL" />
       <updated>1692907615303</updated>
     </task>
-    <option name="localTasksCounter" value="17" />
+    <task id="LOCAL-00017" summary="New feature: File can be transferred to Server.">
+      <option name="closed" value="true" />
+      <created>1692985622167</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1692985622167</updated>
+    </task>
+    <option name="localTasksCounter" value="18" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -298,7 +303,8 @@
     <MESSAGE value="MenuBar created. Client-side design has begun." />
     <MESSAGE value="RemoteAgent::transferFileToServer implemented." />
     <MESSAGE value="Minor bug fixed." />
-    <option name="LAST_COMMIT_MESSAGE" value="Minor bug fixed." />
+    <MESSAGE value="New feature: File can be transferred to Server." />
+    <option name="LAST_COMMIT_MESSAGE" value="New feature: File can be transferred to Server." />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
   <component name="XDebuggerManager">
