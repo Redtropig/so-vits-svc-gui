@@ -223,7 +223,7 @@ public class GUI extends JFrame {
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
                 }
-            }).start();
+            }, "Connect").start();
         });
 
         // Disconnect

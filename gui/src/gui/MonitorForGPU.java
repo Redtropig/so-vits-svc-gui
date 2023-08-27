@@ -10,8 +10,7 @@ import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.Locale;
 
-import static gui.GUI.ICON_PATH;
-import static gui.GUI.remoteAgent;
+import static gui.GUI.*;
 
 /**
  * GPU Status Monitor
@@ -21,6 +20,7 @@ public class MonitorForGPU extends JFrame {
     private static final String FRAME_TITLE = "GPU Monitor";
     private static final int GPU_STATUS_SERVER_PORT = 3687;
     private static final long REFRESH_INTERVAL = 1000; // ms
+    private static final long CONNECT_RETRY_INTERVAL = 1000; // ms
 
     private JTextArea displayArea;
     private JPanel monitorPanel;
@@ -62,9 +62,6 @@ public class MonitorForGPU extends JFrame {
 
                         // Connected to Server?
                         if (remoteAgent != null) {
-                            displayArea.setText("Attempting to connect Server GPU Monitor...");
-                            Thread.sleep(1);
-                            pack();
                             gpuSocket = new Socket(remoteAgent.getInetAddress(), GPU_STATUS_SERVER_PORT);
                             gpuStatusInputStream = gpuSocket.getInputStream();
                         } else {
@@ -75,11 +72,13 @@ public class MonitorForGPU extends JFrame {
                         // get new GPU-status
                         StringBuilder displayBuffer = new StringBuilder();
                         BufferedReader in = new BufferedReader(new InputStreamReader(gpuStatusInputStream,
-                                GUI.CHARSET_DISPLAY_DEFAULT));
+                                CHARSET_DISPLAY_DEFAULT));
                         String line;
                         while ((line = in.readLine()) != null) {
                             displayBuffer.append(line).append('\n');
                         }
+                        in.close();
+
                         // End Connection
                         if (gpuSocket != null) {
                             gpuSocket.close();
@@ -100,7 +99,10 @@ public class MonitorForGPU extends JFrame {
                     Thread.sleep(REFRESH_INTERVAL);
                 } catch (IOException ex) {
                     try {
-                        Thread.sleep(1000);
+                        displayArea.setText("Re-attempting to connect Server GPU Monitor...");
+                        Thread.sleep(1);
+                        pack();
+                        Thread.sleep(CONNECT_RETRY_INTERVAL);
                     } catch (InterruptedException e) {
                         return;
                     }
