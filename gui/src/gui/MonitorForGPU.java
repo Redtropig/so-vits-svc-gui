@@ -62,6 +62,9 @@ public class MonitorForGPU extends JFrame {
 
                         // Connected to Server?
                         if (remoteAgent != null) {
+                            displayArea.setText("Attempting to connect Server GPU Monitor...");
+                            Thread.sleep(1);
+                            pack();
                             gpuSocket = new Socket(remoteAgent.getInetAddress(), GPU_STATUS_SERVER_PORT);
                             gpuStatusInputStream = gpuSocket.getInputStream();
                         } else {
@@ -96,6 +99,11 @@ public class MonitorForGPU extends JFrame {
                     // Refresh Interval
                     Thread.sleep(REFRESH_INTERVAL);
                 } catch (IOException ex) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        return;
+                    }
                     continue;
                 } catch (InterruptedException ex) {
                     return;

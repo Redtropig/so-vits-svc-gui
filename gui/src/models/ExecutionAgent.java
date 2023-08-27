@@ -1,7 +1,5 @@
 package models;
 
-import gui.GUI;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -11,6 +9,8 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
+
+import static gui.GUI.CHARSET_DISPLAY_DEFAULT;
 
 /**
  * Execution Agent
@@ -47,8 +47,14 @@ public class ExecutionAgent {
         return (executionAgent == null) ? (executionAgent = new ExecutionAgent()) : (executionAgent);
     }
 
-    public Process getCurrentProcess() {
-        return currentProcess;
+    /**
+     * Kill current Process & its sub Processes.
+     */
+    public void killCurrentProcess() {
+        if (currentProcess != null) {
+            currentProcess.descendants().forEach(ProcessHandle::destroy);
+            currentProcess.destroy();
+        }
     }
 
     /**
@@ -79,7 +85,7 @@ public class ExecutionAgent {
                 currentProcess.onExit().thenAccept(afterExecution == null ? (process)->{} : afterExecution);
                 // Redirect process output
                 BufferedReader in = new BufferedReader(new InputStreamReader(currentProcess.getInputStream(),
-                        GUI.CHARSET_DISPLAY_DEFAULT));
+                        CHARSET_DISPLAY_DEFAULT));
                 String line;
                 while ((line = in.readLine()) != null) {
                     System.out.println(line);

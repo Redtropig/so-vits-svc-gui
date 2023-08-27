@@ -1,6 +1,5 @@
 package models;
 
-import gui.GUI;
 import org.json.JSONObject;
 
 import javax.swing.*;
@@ -8,6 +7,8 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+
+import static gui.GUI.CHARSET_DISPLAY_DEFAULT;
 
 /**
  * Remote Agent
@@ -21,6 +22,10 @@ public class RemoteAgent {
 
     private Socket controlSocket;
 
+    /**
+     * @param address Server address to connect
+     * @throws IOException failed to connect to Server
+     */
     public RemoteAgent(InetSocketAddress address) throws IOException {
         controlSocket = new Socket(address.getAddress(), address.getPort());
         controlSocket.setKeepAlive(true);
@@ -92,7 +97,7 @@ public class RemoteAgent {
 
         // retrieve Feedback from Server
         BufferedReader in = new BufferedReader(new InputStreamReader(controlSocket.getInputStream(),
-                GUI.CHARSET_DISPLAY_DEFAULT));
+                CHARSET_DISPLAY_DEFAULT));
         String line;
         while ((line = in.readLine()) != null) {
             System.out.println(line);
