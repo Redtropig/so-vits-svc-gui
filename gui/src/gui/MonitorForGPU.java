@@ -1,6 +1,7 @@
 package gui;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
@@ -40,6 +41,8 @@ public class MonitorForGPU extends JFrame {
         setVisible(true);
         setContentPane(monitorPanel);
 
+        pack();
+
         // Schedule GPU status auto-refresh
         registerAutoRefresh();
     }
@@ -51,6 +54,8 @@ public class MonitorForGPU extends JFrame {
         ProcessBuilder gpuQueryBuilder = new ProcessBuilder("nvidia-smi.exe");
 
         autoRefresh = new Thread(() -> {
+            displayArea.setText("Attempting to retrieve GPU Info...");
+
             // Refresh Loop
             while (!Thread.currentThread().isInterrupted()) {
                 try {
@@ -62,9 +67,11 @@ public class MonitorForGPU extends JFrame {
 
                         // Connected to Server?
                         if (remoteAgent != null) {
+                            setTitle(FRAME_TITLE + " (remote)");
                             gpuSocket = new Socket(remoteAgent.getInetAddress(), GPU_STATUS_SERVER_PORT);
                             gpuStatusInputStream = gpuSocket.getInputStream();
                         } else {
+                            setTitle(FRAME_TITLE + " (local)");
                             gpuQuery = gpuQueryBuilder.start();
                             gpuStatusInputStream = gpuQuery.getInputStream();
                         }
@@ -85,23 +92,24 @@ public class MonitorForGPU extends JFrame {
                         }
 
                         // update display area
-                        int selectionStart = displayArea.getSelectionStart();
-                        int selectionEnd = displayArea.getSelectionEnd();
-                        displayArea.setText(displayBuffer.toString());
-                        displayArea.setSelectionStart(selectionStart);
-                        displayArea.setSelectionEnd(selectionEnd);
-
-                        // Adjust Window Size
-                        Thread.sleep(1); // yield
-                        pack();
+                        EventQueue.invokeLater(() -> {
+                            int selectionStart = displayArea.getSelectionStart();
+                            int selectionEnd = displayArea.getSelectionEnd();
+                            displayArea.setText(displayBuffer.toString());
+                            displayArea.setSelectionStart(selectionStart);
+                            displayArea.setSelectionEnd(selectionEnd);
+                            // Adjust Window Size
+                            pack();
+                        });
                     }
                     // Refresh Interval
                     Thread.sleep(REFRESH_INTERVAL);
                 } catch (IOException ex) {
                     try {
-                        displayArea.setText("Re-attempting to connect Server GPU Monitor...");
-                        Thread.sleep(1);
-                        pack();
+                        EventQueue.invokeLater(() -> {
+                            displayArea.setText("Re-attempting to connect Server GPU Monitor...");
+                            pack();
+                        });
                         Thread.sleep(CONNECT_RETRY_INTERVAL);
                     } catch (InterruptedException e) {
                         return;

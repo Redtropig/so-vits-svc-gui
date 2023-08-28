@@ -9,10 +9,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7fb02174-3f4b-4c79-8849-a38c17ff3a31" name="Changes" comment="Code Structure Refactored.">
+    <list default="true" id="7fb02174-3f4b-4c79-8849-a38c17ff3a31" name="Changes" comment="New feature: Remote GPU Monitor.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/src/gui/GUI.form" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/gui/GUI.form" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/gui/src/gui/GUI.java" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/gui/GUI.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/src/gui/MonitorForGPU.form" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/gui/MonitorForGPU.form" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/gui/src/gui/MonitorForGPU.java" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/gui/MonitorForGPU.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/src/models/ExecutionAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/models/ExecutionAgent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/src/models/InstructionType.java" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/models/InstructionType.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/src/models/RemoteAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/models/RemoteAgent.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -40,6 +45,13 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RESET_MODE" value="SOFT" />
+  </component>
+  <component name="GithubProjectSettings">
+    <option name="branchProtectionPatterns">
+      <list>
+        <option value="master" />
+      </list>
+    </option>
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />

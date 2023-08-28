@@ -43,14 +43,14 @@ public class ExecutionAgent {
      * Get the singleton ExecutionAgent instance.
      * @return the ExecutionAgent instance if present, otherwise create new.
      */
-    public static ExecutionAgent getExecutionAgent() {
+    public static synchronized ExecutionAgent getExecutionAgent() {
         return (executionAgent == null) ? (executionAgent = new ExecutionAgent()) : (executionAgent);
     }
 
     /**
      * Kill current Process & its sub Processes.
      */
-    public void killCurrentProcess() {
+    public synchronized void killCurrentProcess() {
         if (currentProcess != null) {
             currentProcess.descendants().forEach(ProcessHandle::destroy);
             currentProcess.destroy();

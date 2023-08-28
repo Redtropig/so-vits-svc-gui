@@ -43,7 +43,7 @@ public class RemoteAgent {
     }
 
     /**
-     * Notify Server the FileUsage & Transfer a Single File to the Server.
+     * Notify Server the FileUsage & Transfer a Single File to the Server. (in current Thread, may Block)
      * @param usage Enum indicates the usage of the file to be transferred.
      * @param file File to be transferred.
      * @param progressBar JProgressBar to be updated.
@@ -82,7 +82,7 @@ public class RemoteAgent {
     }
 
     /**
-     * Transfer a Single Instruction to the Server, and Retrieve Feedback from the Server.
+     * Transfer a Single Instruction to the Server, and Retrieve Feedback from the Server. (in current Thread, may Block)
      * @param instruction Instruction to be transferred.
      */
     public synchronized void executeInstructionOnServer(JSONObject instruction) throws IOException {

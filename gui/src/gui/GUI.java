@@ -304,7 +304,7 @@ public class GUI extends JFrame {
                 final String finalSpeakerName = speakerName;
                 new SwingWorker<Void, Integer>() {
                     @Override
-                    protected Void doInBackground() throws InterruptedException, IOException {
+                    protected Void doInBackground() throws InterruptedException {
                         /* Transfer voice files */
                         System.out.println("[INFO] Uploading Voice File(s)...");
                         totalVoiceFilesTransProgress.setMaximum(voiceAudioFiles.length);
@@ -339,11 +339,15 @@ public class GUI extends JFrame {
                         instruction.put("min_interval", SLICING_MIN_INTERVAL_DEFAULT);
 
                         // Execute Instruction on Server
-                        remoteAgent.executeInstructionOnServer(instruction);
-
-                        // enable related interactions
-                        voiceSlicerBtn.setEnabled(true);
-                        clearSliceOutDirBtn.setEnabled(true);
+                        try {
+                            remoteAgent.executeInstructionOnServer(instruction);
+                        } catch (IOException ex) {
+                            return null;
+                        } finally {
+                            // enable related interactions
+                            voiceSlicerBtn.setEnabled(true);
+                            clearSliceOutDirBtn.setEnabled(true);
+                        }
                         /* End Slice on Server */
 
                         return null;
@@ -385,13 +389,10 @@ public class GUI extends JFrame {
                         null,
                         (process) -> {
                             if (process.exitValue() == 0) {
-                                System.out.println("[INFO] Slicing completed: " + voiceFile.getName());
+                                System.out.println("[INFO] Slicing completed: \"" + voiceFile.getName() + "\"");
                             } else {
-                                System.out.println("[ERROR] \"" +
-                                        SLICER_PY.getName() +
-                                        "\" terminated unexpectedly, exit code: " +
-                                        process.exitValue()
-                                );
+                                String errorMessage = buildTerminationErrorMessage(process, SLICER_PY);
+                                System.err.println(errorMessage);
                             }
 
                             if (finalI == 0) {
@@ -459,6 +460,46 @@ public class GUI extends JFrame {
         preprocessOutDirFld.setText(PREPROCESS_OUT_DIR_DEFAULT.getPath());
         preprocessBtn.addActionListener(e -> {
 
+            // disable related interactions before preprocess
+            preprocessBtn.setEnabled(false);
+            clearPreprocessOutDirBtn.setEnabled(false);
+
+            /* Connected to Server */
+            if (remoteAgent != null) {
+
+                // Preprocess Worker
+                new SwingWorker<Void, Void>() {
+                    @Override
+                    protected Void doInBackground() {
+
+                        /* Preprocess on Server */
+                        // Construct Instruction
+                        JSONObject instruction = new JSONObject();
+                        instruction.put("INSTRUCTION", InstructionType.PREPROCESS.name());
+                        instruction.put("encoder", speechEncoderCbBx.getSelectedItem());
+                        instruction.put("f0_predictor", f0PredictorPreproCbBx.getSelectedItem());
+                        instruction.put("loudness_embedding", loudnessEmbedCkBx.isSelected());
+
+                        // Execute Instruction on Server
+                        try {
+                            remoteAgent.executeInstructionOnServer(instruction);
+                        } catch (IOException ex) {
+                            return null;
+                        } finally {
+                            // enable related interactions
+                            preprocessBtn.setEnabled(true);
+                            clearPreprocessOutDirBtn.setEnabled(true);
+                        }
+                        /* End Preprocess on Server */
+
+                        return null;
+                    }
+                }.execute();
+
+                return;
+            }
+            /* End Connected to Server */
+
             // dataset_raw: nothing is prepared
             if (Objects.requireNonNull(SLICING_OUT_DIR_DEFAULT.listFiles(File::isDirectory)).length == 0) {
                 System.err.println("[!] Please SLICE at least 1 VOICE file.");
@@ -466,9 +507,6 @@ public class GUI extends JFrame {
             }
 
             System.out.println("[INFO] Preprocessing Dataset...");
-            // disable related interactions before preprocess
-            preprocessBtn.setEnabled(false);
-            clearPreprocessOutDirBtn.setEnabled(false);
 
             resampleAudio();
             splitDatasetAndGenerateConfig();
@@ -539,6 +577,41 @@ public class GUI extends JFrame {
                 startTrainingBtn.setText("Abort");
                 clearTrainLogDirBtn.setEnabled(false);
 
+                /* Connected to Server */
+                if (remoteAgent != null) {
+
+                    // Train Worker
+                    new SwingWorker<Void, Void>() {
+                        @Override
+                        protected Void doInBackground() {
+
+                            /* Train on Server */
+                            // Construct Instruction
+                            JSONObject instruction = overwriteTrainingConfig();
+                            instruction.put("INSTRUCTION", InstructionType.TRAIN.name());
+
+                            displaySpeakersName();
+
+                            // Execute Instruction on Server
+                            try {
+                                remoteAgent.executeInstructionOnServer(instruction);
+                            } catch (IOException ex) {
+                                return null;
+                            } finally {
+                                // enable related interactions
+                                startTrainingBtn.setText(TRAINING_BTN_TEXT);
+                                clearTrainLogDirBtn.setEnabled(true);
+                            }
+                            /* End Train on Server */
+
+                            return null;
+                        }
+                    }.execute();
+
+                    return;
+                }
+                /* End Connected to Server */
+
                 // if resume training
                 if (TRAINING_CONFIG_LOG.exists()) {
                     loadTrainingConfig();
@@ -547,7 +620,41 @@ public class GUI extends JFrame {
                 overwriteTrainingConfig();
                 displaySpeakersName();
                 startTraining();
+
             } else { // Abort
+                /* Connected to Server */
+                if (remoteAgent != null) {
+
+                    // Train Abort Worker
+                    new SwingWorker<Void, Void>() {
+                        @Override
+                        protected Void doInBackground() {
+
+                            /* Abort on Server */
+                            // Construct Instruction
+                            JSONObject instruction = new JSONObject();
+                            instruction.put("INSTRUCTION", InstructionType.ABORT.name());
+
+                            // Execute Instruction on Server
+                            try {
+                                remoteAgent.executeInstructionOnServer(instruction);
+                            } catch (IOException ex) {
+                                return null;
+                            } finally {
+                                // enable related interactions
+                                startTrainingBtn.setText(TRAINING_BTN_TEXT);
+                                clearTrainLogDirBtn.setEnabled(true);
+                            }
+                            /* End Abort on Server */
+
+                            return null;
+                        }
+                    }.execute();
+
+                    return;
+                }
+                /* End Connected to Server */
+
                 executionAgent.killCurrentProcess();
             }
         });
@@ -647,8 +754,53 @@ public class GUI extends JFrame {
                 inferenceBtn.setText("Abort");
                 System.out.println("[INFO] Inference Running... (this may take minutes without console output)");
 
+                /* Connected to Server */
+                if (remoteAgent != null) {
+                    // TODO
+                    return;
+                }
+                /* End Connected to Server */
+
                 startInference();
+
             } else { // Abort
+                /* Connected to Server */
+                if (remoteAgent != null) {
+
+                    // Inference Abort Worker
+                    new SwingWorker<Void, Void>() {
+                        @Override
+                        protected Void doInBackground() {
+
+                            /* Abort on Server */
+                            // Construct Instruction
+                            JSONObject instruction = new JSONObject();
+                            instruction.put("INSTRUCTION", InstructionType.ABORT.name());
+
+                            // Execute Instruction on Server
+                            try {
+                                remoteAgent.executeInstructionOnServer(instruction);
+                            } catch (IOException ex) {
+                                return null;
+                            } finally {
+                                // reset Inference State -> Vacant
+                                vocalAudioFiles = null;
+                                vocalChosenFld.setEnabled(false);
+                                vocalChosenFld.setText("File name(s) should be in English");
+                                speakerPickCbBx.setEnabled(false);
+                                speakerPickCbBx.removeAllItems();
+                                inferenceBtn.setText(INFERENCE_BTN_TEXT);
+                            }
+                            /* End Abort on Server */
+
+                            return null;
+                        }
+                    }.execute();
+
+                    return;
+                }
+                /* End Connected to Server */
+
                 executionAgent.killCurrentProcess();
             }
         });
@@ -694,7 +846,7 @@ public class GUI extends JFrame {
                         if (process.exitValue() == 0) {
                             System.out.println("[INFO] Directory Removed: \"" + directory.getPath() + "\"");
                         } else {
-                            System.out.println("[ERROR] \"" +
+                            System.err.println("[ERROR] \"" +
                                     command[0] +
                                     "\" terminated unexpectedly, exit code: " +
                                     process.exitValue()
@@ -726,11 +878,8 @@ public class GUI extends JFrame {
                     if (process.exitValue() == 0) {
                         System.out.println("[INFO] Resampled to 44100Hz mono.");
                     } else {
-                        System.out.println("[ERROR] \"" +
-                                RESAMPLER_PY +
-                                "\" terminated unexpectedly, exit code: " +
-                                process.exitValue()
-                        );
+                        String errorMessage = buildTerminationErrorMessage(process, RESAMPLER_PY);
+                        System.err.println(errorMessage);
                     }
                 }
         );
@@ -757,11 +906,8 @@ public class GUI extends JFrame {
                     if (process.exitValue() == 0) {
                         System.out.println("[INFO] Training Set, Validation Set, Configuration Files Created.");
                     } else {
-                        System.out.println("[ERROR] \"" +
-                                FLIST_CONFIGER_PY.getName() +
-                                "\" terminated unexpectedly, exit code: " +
-                                process.exitValue()
-                        );
+                        String errorMessage = buildTerminationErrorMessage(process, FLIST_CONFIGER_PY);
+                        System.err.println(errorMessage);
                     }
                 }
         );
@@ -786,11 +932,8 @@ public class GUI extends JFrame {
                     if (process.exitValue() == 0) {
                         System.out.println("[INFO] Hubert & F0 Predictor Generated.");
                     } else {
-                        System.out.println("[ERROR] \"" +
-                                HUBERT_F0_GENERATOR_PY.getName() +
-                                "\" terminated unexpectedly, exit code: " +
-                                process.exitValue()
-                        );
+                        String errorMessage = buildTerminationErrorMessage(process, HUBERT_F0_GENERATOR_PY);
+                        System.err.println(errorMessage);
                     }
 
                     System.out.println("[INFO] Preprocessing Done.");
@@ -804,7 +947,7 @@ public class GUI extends JFrame {
     /**
      * Overwrite training config to TRAINING_CONFIG file
      */
-    private void overwriteTrainingConfig() {
+    private JSONObject overwriteTrainingConfig() {
         // Get JSON Objects
         JSONObject configJsonObject = getConfigJsonObject();
         JSONObject trainJsonObject = configJsonObject.getJSONObject("train");
@@ -851,12 +994,13 @@ public class GUI extends JFrame {
         trainJsonObject.put("all_in_mem", allInMemCkBx.isSelected());
 
         // Write config JSON back to TRAINING_CONFIG
-        configJsonObject.put("train", trainJsonObject);
         try (FileWriter configJsonWriter = new FileWriter(TRAINING_CONFIG)) {
             configJsonWriter.write(configJsonObject.toString(JSON_STR_INDENT_FACTOR));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        return configJsonObject;
     }
 
     /**
@@ -913,6 +1057,19 @@ public class GUI extends JFrame {
     }
 
     /**
+     * Build general termination error message about process's unexpected termination.
+     * @param process the Process which ran into a unexpected termination.
+     * @param executable the executable File associated with that process.
+     * @return termination error message
+     */
+    private static String buildTerminationErrorMessage(Process process, File executable) {
+        return "[ERROR] \"" +
+                executable.getName() +
+                "\" terminated unexpectedly, exit code: " +
+                process.exitValue();
+    }
+
+    /**
      * Start Training with config.json
      */
     private void startTraining() {
@@ -937,7 +1094,7 @@ public class GUI extends JFrame {
                     if (process.exitValue() == 0) {
                         System.out.println("[INFO] Training Complete.");
                     } else {
-                        System.out.println("[WARNING] \"" +
+                        System.err.println("[WARNING] \"" +
                                 TRAIN_PY.getName() +
                                 "\" interrupted, exit code: " +
                                 process.exitValue()
@@ -1023,7 +1180,7 @@ public class GUI extends JFrame {
                         System.out.println("[INFO] Inference Complete.");
                         System.out.println("[INFO] Output audios -> \".\\results\"");
                     } else {
-                        System.out.println("[WARNING] \"" +
+                        System.err.println("[WARNING] \"" +
                                 INFERENCE_PY.getName() +
                                 "\" interrupted, exit code: " +
                                 process.exitValue()
