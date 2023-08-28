@@ -49,7 +49,7 @@
     "resblock": "1",
     "ssl_dim": 768,
     "kernel_size": 3,
-    "vol_embedding": true,
+    "vol_embedding": false,
     "flow_share_parameter": false,
     "upsample_rates": [
       8,
@@ -75,7 +75,7 @@
     "n_layers": 6
   },
   "train": {
-    "vol_aug": true,
+    "vol_aug": false,
     "batch_size": 4,
     "init_lr_ratio": 1,
     "seed": 1234,
@@ -101,5 +101,5 @@
     "use_sr": true,
     "max_speclen": 512
   },
-  "spk": {"default-speaker": 0}
+  "spk": {"jj": 0}
 }

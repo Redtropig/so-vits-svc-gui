@@ -157,7 +157,7 @@ public class GUI extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                executionAgent.killCurrentProcess();
+                executionAgent.cancelAllTasks();
                 if (remoteAgent != null) {
                     remoteAgent.close();
                 }
@@ -584,13 +584,27 @@ public class GUI extends JFrame {
                     new SwingWorker<Void, Void>() {
                         @Override
                         protected Void doInBackground() {
+                            // Get train config from Server
+                            JSONObject configJSONObject;
+                            try {
+                                configJSONObject = remoteAgent.getTrainConfig();
+                            } catch (IOException ex) {
+                                // enable related interactions
+                                startTrainingBtn.setText(TRAINING_BTN_TEXT);
+                                clearTrainLogDirBtn.setEnabled(true);
+                                return null;
+                            }
+
+                            // display speaker names
+                            JSONObject speakerJsonObject = configJSONObject.getJSONObject("spk");
+                            speakerNameFld.setText(speakerJsonObject.keySet().toString());
 
                             /* Train on Server */
                             // Construct Instruction
-                            JSONObject instruction = overwriteTrainingConfig();
+                            JSONObject instruction = configJSONObject;
                             instruction.put("INSTRUCTION", InstructionType.TRAIN.name());
-
-                            displaySpeakersName();
+                            instruction.put("train", overwriteTrainingConfig().getJSONObject("train"));
+                            instruction.put("gpu_id", (int) gpuIdSpinner.getValue());
 
                             // Execute Instruction on Server
                             try {
@@ -655,7 +669,7 @@ public class GUI extends JFrame {
                 }
                 /* End Connected to Server */
 
-                executionAgent.killCurrentProcess();
+                executionAgent.cancelAllTasks();
             }
         });
 
@@ -801,7 +815,7 @@ public class GUI extends JFrame {
                 }
                 /* End Connected to Server */
 
-                executionAgent.killCurrentProcess();
+                executionAgent.cancelAllTasks();
             }
         });
     }
@@ -953,26 +967,7 @@ public class GUI extends JFrame {
         JSONObject trainJsonObject = configJsonObject.getJSONObject("train");
 
         // Commit values & Handle invalid user inputs (to previous valid setting)
-        try {
-            logIntervalSpinner.commitEdit();
-        } catch (ParseException e) {
-            logIntervalSpinner.updateUI();
-        }
-        try {
-            evalIntervalSpinner.commitEdit();
-        } catch (ParseException e) {
-            evalIntervalSpinner.updateUI();
-        }
-        try {
-            batchSizeSpinner.commitEdit();
-        } catch (ParseException e) {
-            batchSizeSpinner.updateUI();
-        }
-        try {
-            keepLastNModelSpinner.commitEdit();
-        } catch (ParseException e) {
-            keepLastNModelSpinner.updateUI();
-        }
+        commitAllTrainConfigInput();
 
         // Modify train JSON Object
         trainJsonObject.put("log_interval", (int) logIntervalSpinner.getValue());
@@ -1001,6 +996,37 @@ public class GUI extends JFrame {
         }
 
         return configJsonObject;
+    }
+
+    /**
+     * Commit all train config user input.
+     */
+    private void commitAllTrainConfigInput() {
+        try {
+            logIntervalSpinner.commitEdit();
+        } catch (ParseException e) {
+            logIntervalSpinner.updateUI();
+        }
+        try {
+            evalIntervalSpinner.commitEdit();
+        } catch (ParseException e) {
+            evalIntervalSpinner.updateUI();
+        }
+        try {
+            batchSizeSpinner.commitEdit();
+        } catch (ParseException e) {
+            batchSizeSpinner.updateUI();
+        }
+        try {
+            keepLastNModelSpinner.commitEdit();
+        } catch (ParseException e) {
+            keepLastNModelSpinner.updateUI();
+        }
+        try {
+            gpuIdSpinner.commitEdit();
+        } catch (ParseException e) {
+            gpuIdSpinner.updateUI();
+        }
     }
 
     /**

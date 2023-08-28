@@ -13,6 +13,7 @@ import static gui.GUI.CHARSET_DISPLAY_DEFAULT;
 /**
  * Remote Agent
  * @responsibility Control the remote server to execute instructions.
+ * @feature One RemoteAgent bounds one Server(address & port), eternally.
  */
 public class RemoteAgent {
 
@@ -20,15 +21,16 @@ public class RemoteAgent {
     private static final int FILE_TRANSFER_SERVER_PORT = 23333;
     public static final int FILE_TRANSFER_INTERVAL = 1; // ms
 
-    private Socket controlSocket;
+    private final Socket probeSocket; // closed after probing
 
     /**
+     * Probe connectivity to the Server (does NOT hold the probing connection) & Create RemoteAgent if connectable.
      * @param address Server address to connect
      * @throws IOException failed to connect to Server
      */
     public RemoteAgent(InetSocketAddress address) throws IOException {
-        controlSocket = new Socket(address.getAddress(), address.getPort());
-        controlSocket.setKeepAlive(true);
+        probeSocket = new Socket(address.getAddress(), address.getPort());
+        probeSocket.close();
     }
 
     /**
@@ -36,7 +38,7 @@ public class RemoteAgent {
      */
     public void close() {
         try {
-            controlSocket.close();
+            probeSocket.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -48,9 +50,9 @@ public class RemoteAgent {
      * @param file File to be transferred.
      * @param progressBar JProgressBar to be updated.
      */
-    public synchronized void transferFileToServer(FileUsage usage, File file, JProgressBar progressBar) throws IOException {
+    public void transferFileToServer(FileUsage usage, File file, JProgressBar progressBar) throws IOException {
 
-        Socket fileTransferSocket = new Socket(controlSocket.getInetAddress(), FILE_TRANSFER_SERVER_PORT);
+        Socket fileTransferSocket = new Socket(getInetAddress(), FILE_TRANSFER_SERVER_PORT);
         DataOutputStream serverOutputStream = new DataOutputStream(fileTransferSocket.getOutputStream());
 
         // Notify server InstructionType & FileUsage
@@ -85,53 +87,58 @@ public class RemoteAgent {
      * Transfer a Single Instruction to the Server, and Retrieve Feedback from the Server. (in current Thread, may Block)
      * @param instruction Instruction to be transferred.
      */
-    public synchronized void executeInstructionOnServer(JSONObject instruction) throws IOException {
-        if (controlSocket.isClosed()) {
-            controlSocket = new Socket(controlSocket.getInetAddress(), getPort());
-        }
-        DataOutputStream serverOutputStream = new DataOutputStream(controlSocket.getOutputStream());
+    public void executeInstructionOnServer(JSONObject instruction) throws IOException {
+
+        Socket instructionSocket = new Socket(getInetAddress(), getPort());
+        DataOutputStream serverOutputStream = new DataOutputStream(instructionSocket.getOutputStream());
 
         // send Instruction
         serverOutputStream.writeUTF(instruction.toString());
         serverOutputStream.flush();
 
         // retrieve Feedback from Server
-        BufferedReader in = new BufferedReader(new InputStreamReader(controlSocket.getInputStream(),
+        BufferedReader in = new BufferedReader(new InputStreamReader(instructionSocket.getInputStream(),
                 CHARSET_DISPLAY_DEFAULT));
         String line;
         while ((line = in.readLine()) != null) {
             System.out.println(line);
             System.out.flush();
         }
-        controlSocket.close();
+        instructionSocket.close();
+    }
+
+    /**
+     * Get train config from the Server.
+     * @return train config JSONObject
+     */
+    public JSONObject getTrainConfig() throws IOException {
+
+        Socket instructionSocket = new Socket(getInetAddress(), getPort());
+        DataOutputStream serverOutputStream = new DataOutputStream(instructionSocket.getOutputStream());
+
+        // construct GET config Instruction
+        JSONObject instruction = new JSONObject();
+        instruction.put("INSTRUCTION", InstructionType.GET.name());
+        instruction.put("config", InstructionType.TRAIN.name().toLowerCase());
+
+        // send Instruction
+        serverOutputStream.writeUTF(instruction.toString());
+        serverOutputStream.flush();
+
+        // retrieve configJSONString from Server
+        BufferedReader in = new BufferedReader(new InputStreamReader(instructionSocket.getInputStream(),
+                CHARSET_DISPLAY_DEFAULT));
+        String configJSONString = in.readLine();
+        instructionSocket.close();
+
+        return new JSONObject(configJSONString);
     }
 
     /* Getters */
     public InetAddress getInetAddress() {
-        return controlSocket.getInetAddress();
+        return probeSocket.getInetAddress();
     }
     public int getPort() {
-        return controlSocket.getPort();
-    }
-    /**
-     * Echo this RemoteAgent reference if its connection is currently alive.
-     * @return this RemoteAgent if its connection is still alive, otherwise null.
-     */
-    public RemoteAgent echoIfAlive() {
-        return controlSocket.isClosed()? null : this;
-    }
-    private InputStream getInputStream() {
-        try {
-            return controlSocket.getInputStream();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-    private OutputStream getOutputStream() {
-        try {
-            return controlSocket.getOutputStream();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return probeSocket.getPort();
     }
 }
