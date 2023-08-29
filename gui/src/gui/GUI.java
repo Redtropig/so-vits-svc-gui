@@ -37,6 +37,7 @@ public class GUI extends JFrame {
     private static final File TRAINING_LOG_DIR_DEFAULT = new File(SO_VITS_SVC_DIR + "\\logs\\44k");
     private static final File TRAINING_CONFIG = new File(SO_VITS_SVC_DIR + "\\configs\\config.json");
     private static final File TRAINING_CONFIG_LOG = new File(TRAINING_LOG_DIR_DEFAULT + "\\config.json");
+    private static final File RESULTS_DIR = new File(".\\results");
     private static final int JSON_STR_INDENT_FACTOR = 2;
     private static final int SLICING_MIN_INTERVAL_DEFAULT = 100; // ms
     private static final String AUDIO_FILE_OUT_FORMAT = "wav";
@@ -64,6 +65,14 @@ public class GUI extends JFrame {
             "harvest",
             "rmvpe",
             "fcpe",
+    };
+    private static final ChangeListener minZeroSpinnerGuard = e -> {
+        JSpinner minZeroSpinner = (JSpinner) e.getSource();
+        minZeroSpinner.setValue(Math.max((Integer) minZeroSpinner.getValue(), 0));
+    };
+    private static final ChangeListener minOneSpinnerGuard = e -> {
+        JSpinner minOneSpinner = (JSpinner) e.getSource();
+        minOneSpinner.setValue(Math.max((Integer) minOneSpinner.getValue(), 1));
     };
     private static final int GPU_ID_DEFAULT = 0;
     private static final int BATCH_SIZE_DEFAULT = 4;
@@ -93,7 +102,7 @@ public class GUI extends JFrame {
     private JTextField preprocessOutDirFld;
     private JButton clearPreprocessOutDirBtn;
     private JPanel trainingPanel;
-    private JSpinner gpuIdSpinner;
+    private JSpinner gpuIdSpinnerTrain;
     private JSpinner batchSizeSpinner;
     private JSpinner logIntervalSpinner;
     private JSpinner evalIntervalSpinner;
@@ -118,6 +127,7 @@ public class GUI extends JFrame {
     private JProgressBar totalVoiceFilesTransProgress;
     private JProgressBar currentVocalFileTransProgress;
     private JProgressBar totalVocalFilesTransProgress;
+    private JSpinner gpuIdSpinnerInfer;
     private ButtonGroup floatPrecisionGroup;
     private JMenuItem connectItm;
     private JMenuItem disconnectItm;
@@ -230,7 +240,7 @@ public class GUI extends JFrame {
         disconnectItm.setEnabled(false);
         disconnectItm.addActionListener((e) -> {
             remoteAgent.close();
-            restoreDisconnectedState();
+            resetDisconnectedState();
             System.out.println("[INFO] Disconnected from the server.");
         });
 
@@ -319,7 +329,7 @@ public class GUI extends JFrame {
                                         currentVoiceFileTransProgress
                                 );
                             } catch (IOException ex) {
-                                restoreDisconnectedState();
+                                resetDisconnectedState();
                                 System.err.println("[ERROR] Failed to Upload File(s), please Check the Connection.");
                                 // enable related interactions
                                 voiceSlicerBtn.setEnabled(true);
@@ -424,7 +434,12 @@ public class GUI extends JFrame {
             }
             /* End Connected to Server */
 
-            for (File subDir : Objects.requireNonNull(SLICING_OUT_DIR_DEFAULT.listFiles(File::isDirectory))) {
+            File[] subFiles = Objects.requireNonNull(SLICING_OUT_DIR_DEFAULT.listFiles(File::isDirectory));
+            if (subFiles.length == 0) {
+                System.out.println("[INFO] Slicing Out Directory is Clean, Nothing to Clear.");
+                return;
+            }
+            for (File subDir : subFiles) {
                 removeDirectory(subDir);
             }
         });
@@ -528,7 +543,12 @@ public class GUI extends JFrame {
             }
             /* End Connected to Server */
 
-            for (File subDir : Objects.requireNonNull(PREPROCESS_OUT_DIR_DEFAULT.listFiles(File::isDirectory))) {
+            File[] subFiles = Objects.requireNonNull(PREPROCESS_OUT_DIR_DEFAULT.listFiles(File::isDirectory));
+            if (subFiles.length == 0) {
+                System.out.println("[INFO] Preprocess Out Directory is Clean, Nothing to Clear.");
+                return;
+            }
+            for (File subDir : subFiles) {
                 removeDirectory(subDir);
             }
         });
@@ -536,34 +556,26 @@ public class GUI extends JFrame {
     }
 
     private void createTrainingArea() {
-        ChangeListener minZeroGuard = e -> {
-            JSpinner minZeroSpinner = (JSpinner) e.getSource();
-            minZeroSpinner.setValue(Math.max((Integer) minZeroSpinner.getValue(), 0));
-        };
-        ChangeListener minOneGuard = e -> {
-            JSpinner minOneSpinner = (JSpinner) e.getSource();
-            minOneSpinner.setValue(Math.max((Integer) minOneSpinner.getValue(), 1));
-        };
 
-        /* GPU ID */
-        gpuIdSpinner.setValue(GPU_ID_DEFAULT);
-        gpuIdSpinner.addChangeListener(minZeroGuard);
+        /* GPU ID Train */
+        gpuIdSpinnerTrain.setValue(GPU_ID_DEFAULT);
+        gpuIdSpinnerTrain.addChangeListener(minZeroSpinnerGuard);
 
         /* Batch Size */
         batchSizeSpinner.setValue(BATCH_SIZE_DEFAULT);
-        batchSizeSpinner.addChangeListener(minOneGuard);
+        batchSizeSpinner.addChangeListener(minOneSpinnerGuard);
 
         /* Log Interval */
         logIntervalSpinner.setValue(LOG_INTERVAL_DEFAULT);
-        logIntervalSpinner.addChangeListener(minOneGuard);
+        logIntervalSpinner.addChangeListener(minOneSpinnerGuard);
 
         /* Eval Interval */
         evalIntervalSpinner.setValue(EVAL_INTERVAL_DEFAULT);
-        evalIntervalSpinner.addChangeListener(minOneGuard);
+        evalIntervalSpinner.addChangeListener(minOneSpinnerGuard);
 
         /* Keep Last N Models */
         keepLastNModelSpinner.setValue(KEEP_LAST_N_MODEL_DEFAULT);
-        keepLastNModelSpinner.addChangeListener(minZeroGuard);
+        keepLastNModelSpinner.addChangeListener(minZeroSpinnerGuard);
 
         /* GPU Monitor */
         gpuMonitorBtn.addActionListener(e -> new MonitorForGPU());
@@ -604,7 +616,7 @@ public class GUI extends JFrame {
                             JSONObject instruction = configJSONObject;
                             instruction.put("INSTRUCTION", InstructionType.TRAIN.name());
                             instruction.put("train", overwriteTrainingConfig().getJSONObject("train"));
-                            instruction.put("gpu_id", (int) gpuIdSpinner.getValue());
+                            instruction.put("gpu_id", (int) gpuIdSpinnerTrain.getValue());
 
                             // Execute Instruction on Server
                             try {
@@ -688,10 +700,15 @@ public class GUI extends JFrame {
             }
             /* End Connected to Server */
 
-            for (File subFile : Objects.requireNonNull(TRAINING_LOG_DIR_DEFAULT.listFiles((f) ->
+            File[] subFiles = Objects.requireNonNull(TRAINING_LOG_DIR_DEFAULT.listFiles((f) ->
                     !(f.getName().equals("diffusion") ||
                             f.getName().equals("D_0.pth") ||
-                            f.getName().equals("G_0.pth"))))) {
+                            f.getName().equals("G_0.pth"))));
+            if (subFiles.length == 0) {
+                System.out.println("[INFO] Train Log Directory is Clean, Nothing to Clear.");
+                return;
+            }
+            for (File subFile : subFiles) {
                 if (subFile.isDirectory()) {
                     removeDirectory(subFile);
                 } else {
@@ -703,6 +720,10 @@ public class GUI extends JFrame {
     }
 
     private void createInferenceArea() {
+
+        /* GPU ID Inference */
+        gpuIdSpinnerInfer.setValue(GPU_ID_DEFAULT);
+        gpuIdSpinnerInfer.addChangeListener(minZeroSpinnerGuard);
 
         /* Vocal File Chooser */
         vocalChooserBtn.addActionListener(e -> {
@@ -726,7 +747,7 @@ public class GUI extends JFrame {
                     try {
                         File copied = Files.copy(
                                 f.toPath(),
-                                new File(INFERENCE_INPUT_DIR_DEFAULT.getPath() + "\\" + f.getName()).toPath(),
+                                new File(INFERENCE_INPUT_DIR_DEFAULT, f.getName()).toPath(),
                                 StandardCopyOption.REPLACE_EXISTING
                         ).toFile();
 
@@ -741,7 +762,20 @@ public class GUI extends JFrame {
 
                 // Unlock Speaker picking ComboBox
                 speakerPickCbBx.removeAllItems();
-                getConfigJsonObject().getJSONObject("spk").keySet().forEach((spk) -> {
+                JSONObject configJSONObject;
+                /// Connected to Server?
+                if (remoteAgent != null) {
+                    try {
+                        configJSONObject = remoteAgent.getTrainConfig();
+                    } catch (IOException ex) {
+                        resetDisconnectedState();
+                        System.err.println("[ERROR] Connection Lost.");
+                        return;
+                    }
+                } else {
+                    configJSONObject = getConfigJsonObject();
+                }
+                configJSONObject.getJSONObject("spk").keySet().forEach((spk) -> {
                     speakerPickCbBx.addItem(spk);
                 });
                 speakerPickCbBx.setEnabled(true);
@@ -766,15 +800,90 @@ public class GUI extends JFrame {
             // Infer or Abort
             if (inferenceBtn.getText().equals(INFERENCE_BTN_TEXT)) {
                 inferenceBtn.setText("Abort");
-                System.out.println("[INFO] Inference Running... (this may take minutes without console output)");
 
                 /* Connected to Server */
                 if (remoteAgent != null) {
-                    // TODO
+
+                    // Inference Worker
+                    new SwingWorker<Void, Integer>() {
+                        @Override
+                        protected Void doInBackground() throws InterruptedException {
+                            /* Transfer vocal files */
+                            System.out.println("[INFO] Uploading Vocal File(s)...");
+                            totalVocalFilesTransProgress.setMaximum(vocalAudioFiles.length);
+                            totalVocalFilesTransProgress.setValue(0);
+                            totalVocalFilesTransProgress.setString("0/" + totalVocalFilesTransProgress.getMaximum());
+
+                            for (int i = 0; i < vocalAudioFiles.length; Thread.sleep(RemoteAgent.FILE_TRANSFER_INTERVAL)) {
+                                try {
+                                    remoteAgent.transferFileToServer(
+                                            FileUsage.TO_INFER,
+                                            vocalAudioFiles[i],
+                                            currentVocalFileTransProgress
+                                    );
+                                } catch (IOException ex) {
+                                    resetDisconnectedState();
+                                    System.err.println("[ERROR] Failed to Upload File(s), please Check the Connection.");
+                                    return null;
+                                }
+                                publish(++i);
+                            }
+                            System.out.println("[INFO] All Vocal File(s) are Uploaded to Server.");
+                            /* End Transfer vocal files */
+
+                            /* Inference on Server */
+                            commitAllInferConfigInput();
+                            // Construct Instruction
+                            JSONObject instruction = new JSONObject();
+                            instruction.put("INSTRUCTION", InstructionType.INFER.name());
+                            instruction.put("gpu_id", (int) gpuIdSpinnerInfer.getValue());
+                            instruction.put("spk", speakerPickCbBx.getSelectedItem());
+                            instruction.put("f0_predictor", f0PredictorInferCbBx.getSelectedItem());
+                            instruction.put("nsf_hifigan", nsfHiFiGanCkBx.isSelected());
+
+                            System.out.println("[INFO] Inference Running... (this may take minutes without console output)");
+
+                            // Execute Instruction on Server
+                            try {
+                                remoteAgent.executeInstructionOnServer(instruction);
+                            } catch (IOException ex) {
+                                resetInferenceState();
+                                System.err.println("[ERROR] Inference Failed.");
+                                return null;
+                            }
+                            /* End Inference on Server */
+
+                            /* Get Results from Server */
+                            try {
+                                remoteAgent.getResultFiles(RESULTS_DIR);
+                            } catch (IOException ex) {
+                                System.err.println("[ERROR] Failed to Get Result Files from Server.");
+                                return null;
+                            } finally {
+                                resetInferenceState();
+                            }
+                            /* End Get Results from Server */
+
+                            System.out.println("[INFO] Output audios -> \"" + RESULTS_DIR + "\"");
+
+                            return null;
+                        }
+
+                        @Override
+                        protected void process(List<Integer> completedCount) {
+                            totalVocalFilesTransProgress.setValue(completedCount.get(completedCount.size() - 1));
+                            totalVocalFilesTransProgress.setString(
+                                    totalVocalFilesTransProgress.getValue() +"/"+ totalVocalFilesTransProgress.getMaximum()
+                            );
+                        }
+                    }.execute();
+
                     return;
                 }
                 /* End Connected to Server */
 
+                // local inference below
+                System.out.println("[INFO] Inference Running... (this may take minutes without console output)");
                 startInference();
 
             } else { // Abort
@@ -797,13 +906,7 @@ public class GUI extends JFrame {
                             } catch (IOException ex) {
                                 return null;
                             } finally {
-                                // reset Inference State -> Vacant
-                                vocalAudioFiles = null;
-                                vocalChosenFld.setEnabled(false);
-                                vocalChosenFld.setText("File name(s) should be in English");
-                                speakerPickCbBx.setEnabled(false);
-                                speakerPickCbBx.removeAllItems();
-                                inferenceBtn.setText(INFERENCE_BTN_TEXT);
+                                resetInferenceState();
                             }
                             /* End Abort on Server */
 
@@ -1023,9 +1126,20 @@ public class GUI extends JFrame {
             keepLastNModelSpinner.updateUI();
         }
         try {
-            gpuIdSpinner.commitEdit();
+            gpuIdSpinnerTrain.commitEdit();
         } catch (ParseException e) {
-            gpuIdSpinner.updateUI();
+            gpuIdSpinnerTrain.updateUI();
+        }
+    }
+
+    /**
+     * Commit all inference config user input.
+     */
+    private void commitAllInferConfigInput() {
+        try {
+            gpuIdSpinnerInfer.commitEdit();
+        } catch (ParseException e) {
+            gpuIdSpinnerInfer.updateUI();
         }
     }
 
@@ -1103,7 +1217,7 @@ public class GUI extends JFrame {
                 "cmd.exe",
                 "/c",
                 "set",
-                "CUDA_VISIBLE_DEVICES=" + (int) gpuIdSpinner.getValue(),
+                "CUDA_VISIBLE_DEVICES=" + (int) gpuIdSpinnerTrain.getValue(),
                 "&&",
                 PYTHON_EXE.getAbsolutePath(),
                 TRAIN_PY.getAbsolutePath(),
@@ -1146,7 +1260,7 @@ public class GUI extends JFrame {
         command.add("cmd.exe");
         command.add("/c");
         command.add("set");
-        command.add("CUDA_VISIBLE_DEVICES=" + (int) gpuIdSpinner.getValue());
+        command.add("CUDA_VISIBLE_DEVICES=" + (int) gpuIdSpinnerInfer.getValue());
         command.add("&&");
         command.add(PYTHON_EXE.getAbsolutePath());
         command.add(INFERENCE_PY.getAbsolutePath());
@@ -1204,7 +1318,7 @@ public class GUI extends JFrame {
                 (process) -> {
                     if (process.exitValue() == 0) {
                         System.out.println("[INFO] Inference Complete.");
-                        System.out.println("[INFO] Output audios -> \".\\results\"");
+                        System.out.println("[INFO] Output audios -> \"" + RESULTS_DIR + "\"");
                     } else {
                         System.err.println("[WARNING] \"" +
                                 INFERENCE_PY.getName() +
@@ -1213,22 +1327,31 @@ public class GUI extends JFrame {
                         );
                     }
 
-                    // reset Inference State -> Vacant
-                    vocalAudioFiles = null;
-                    vocalChosenFld.setEnabled(false);
-                    vocalChosenFld.setText("File name(s) should be in English");
-                    speakerPickCbBx.setEnabled(false);
-                    speakerPickCbBx.removeAllItems();
-                    inferenceBtn.setText(INFERENCE_BTN_TEXT);
+                    // delete all temp Files
+                    Arrays.stream(vocalAudioFiles).forEach(File::delete);
+                    resetInferenceState();
                 }
         );
         executionAgent.invokeExecution();
     }
 
     /**
+     * Reset Inference Components State -> Vacant
+     */
+    private void resetInferenceState() {
+        vocalAudioFiles = null;
+        vocalChosenFld.setEnabled(false);
+        vocalChosenFld.setText("File name(s) should be in English");
+        speakerPickCbBx.setEnabled(false);
+        speakerPickCbBx.removeAllItems();
+        inferenceBtn.setText(INFERENCE_BTN_TEXT);
+    }
+
+    /**
      * Update/Restore GUI to disconnected state.
      */
-    private void restoreDisconnectedState() {
+    private void resetDisconnectedState() {
+        resetInferenceState();
         remoteAgent = null;
         disconnectItm.setEnabled(false);
         currentConnection.setText("@localhost");

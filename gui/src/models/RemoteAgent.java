@@ -19,7 +19,7 @@ public class RemoteAgent {
 
     private static final int FILE_TRANSFER_FRAGMENT_SIZE = 1024; // bytes
     private static final int FILE_TRANSFER_SERVER_PORT = 23333;
-    public static final int FILE_TRANSFER_INTERVAL = 1; // ms
+    public static final int FILE_TRANSFER_INTERVAL = 5; // ms
 
     private final Socket probeSocket; // closed after probing
 
@@ -118,7 +118,7 @@ public class RemoteAgent {
 
         // construct GET config Instruction
         JSONObject instruction = new JSONObject();
-        instruction.put("INSTRUCTION", InstructionType.GET.name());
+        instruction.put("INSTRUCTION", InstructionType.GET_CONF.name());
         instruction.put("config", InstructionType.TRAIN.name().toLowerCase());
 
         // send Instruction
@@ -132,6 +132,47 @@ public class RemoteAgent {
         instructionSocket.close();
 
         return new JSONObject(configJSONString);
+    }
+
+    /**
+     * Get result Files from the Server and Write them into local resultDir directory.
+     * @param resultDir the directory to store the received result Files.
+     */
+    public void getResultFiles(File resultDir) throws IOException {
+
+        Socket instructionSocket = new Socket(getInetAddress(), getPort());
+        DataInputStream serverInputStream = new DataInputStream(instructionSocket.getInputStream());
+        DataOutputStream serverOutputStream = new DataOutputStream(instructionSocket.getOutputStream());
+
+        // construct GET results Instruction
+        JSONObject instruction = new JSONObject();
+        instruction.put("INSTRUCTION", InstructionType.GET_RESULTS.name());
+
+        // send Instruction
+        serverOutputStream.writeUTF(instruction.toString());
+        serverOutputStream.flush();
+
+        // get result Files from Server
+        while (true) {
+            File resultFile;
+            try {
+                resultFile = new File(resultDir, serverInputStream.readUTF());
+            } catch (IOException ex) { // Server side closed File transfer socket pipe
+                break;
+            }
+            FileOutputStream fileOutStream = new FileOutputStream(resultFile);
+
+            // Write to File
+            int fileLen = serverInputStream.readInt();
+            byte[] buffer = new byte[fileLen];
+            serverInputStream.readFully(buffer, 0, fileLen);
+            fileOutStream.write(buffer, 0, fileLen);
+            fileOutStream.close();
+
+            System.out.println("[INFO] File Received: \"" + resultFile + "\"");
+        }
+
+        instructionSocket.close();
     }
 
     /* Getters */
