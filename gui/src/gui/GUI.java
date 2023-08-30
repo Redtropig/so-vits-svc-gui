@@ -212,6 +212,8 @@ public class GUI extends JFrame {
 
             // Connect to Server
             new Thread(() -> {
+                connectItm.setEnabled(false);
+
                 // parse String[] to InetAddress
                 InetSocketAddress address;
                 try {
@@ -232,6 +234,8 @@ public class GUI extends JFrame {
                     System.err.println("[!] <IP:Port> address invalid.");
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
+                } finally {
+                    connectItm.setEnabled(true);
                 }
             }, "Connect").start();
         });
@@ -854,6 +858,7 @@ public class GUI extends JFrame {
                             /* End Inference on Server */
 
                             /* Get Results from Server */
+                            System.out.println("[INFO] Retrieving Results from Server...");
                             try {
                                 remoteAgent.getResultFiles(RESULTS_DIR);
                             } catch (IOException ex) {

@@ -9,8 +9,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7fb02174-3f4b-4c79-8849-a38c17ff3a31" name="Changes" comment="New feature: Remote Inference &amp; Results Retrieval.&#10;All Client design done.">
+    <list default="true" id="7fb02174-3f4b-4c79-8849-a38c17ff3a31" name="Changes" comment="UML Diagram Generated.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/src/gui/GUI.java" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/gui/GUI.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/src/gui/MonitorForGPU.java" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/gui/MonitorForGPU.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/src/models/RemoteAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/models/RemoteAgent.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

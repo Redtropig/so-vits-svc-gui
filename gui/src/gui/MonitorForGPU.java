@@ -19,7 +19,7 @@ import static gui.GUI.*;
  */
 public class MonitorForGPU extends JFrame {
     private static final String FRAME_TITLE = "GPU Monitor";
-    private static final int GPU_STATUS_SERVER_PORT = 3687;
+    private static final int GPU_STATUS_SERVER_PORT = 43687;
     private static final long REFRESH_INTERVAL = 1000; // ms
     private static final long CONNECT_RETRY_INTERVAL = 1000; // ms
 

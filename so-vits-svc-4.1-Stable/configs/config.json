@@ -76,7 +76,7 @@
   },
   "train": {
     "vol_aug": true,
-    "batch_size": 4,
+    "batch_size": 16,
     "init_lr_ratio": 1,
     "seed": 1234,
     "c_mel": 45,
@@ -89,7 +89,7 @@
     "lr_decay": 0.999875,
     "segment_size": 10240,
     "c_kl": 1,
-    "eval_interval": 10,
+    "eval_interval": 20,
     "port": "8001",
     "betas": [
       0.8,

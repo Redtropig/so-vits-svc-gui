@@ -18,8 +18,8 @@ import static gui.GUI.CHARSET_DISPLAY_DEFAULT;
 public class RemoteAgent {
 
     private static final int FILE_TRANSFER_FRAGMENT_SIZE = 1024; // bytes
-    private static final int FILE_TRANSFER_SERVER_PORT = 23333;
-    public static final int FILE_TRANSFER_INTERVAL = 5; // ms
+    private static final int FILE_TRANSFER_SERVER_PORT = 43688;
+    public static final int FILE_TRANSFER_INTERVAL = 500; // ms
 
     private final Socket probeSocket; // closed after probing
 
@@ -63,7 +63,7 @@ public class RemoteAgent {
         // Transfer File
         DataInputStream fileInputStream = new DataInputStream(new FileInputStream(file));
 
-        {
+        try {
             byte[] fragment = new byte[FILE_TRANSFER_FRAGMENT_SIZE];
             long totalLengthTransferred = 0;
             int acturalFragmentLength;
@@ -73,9 +73,12 @@ public class RemoteAgent {
                 totalLengthTransferred += acturalFragmentLength;
                 // update progressBar
                 if (progressBar != null) {
-                    progressBar.setValue((int) (totalLengthTransferred / file.length() * 100));
+                    progressBar.setValue((int) ((double) totalLengthTransferred / file.length() * 100));
                 }
             }
+        } catch (IOException ex) {
+            System.err.println(ex.getMessage());
+            throw ex;
         }
 
         // Closures
