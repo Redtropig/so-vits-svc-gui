@@ -1,0 +1,256 @@
+@startuml
+
+/' diagram meta data start
+config=StructureConfiguration;
+{
+  "projectClassification": {
+    "searchMode": "OpenProject", // OpenProject, AllProjects
+    "includedProjects": "",
+    "pathEndKeywords": "*.impl",
+    "isClientPath": "",
+    "isClientName": "",
+    "isTestPath": "",
+    "isTestName": "",
+    "isMappingPath": "",
+    "isMappingName": "",
+    "isDataAccessPath": "",
+    "isDataAccessName": "",
+    "isDataStructurePath": "",
+    "isDataStructureName": "",
+    "isInterfaceStructuresPath": "",
+    "isInterfaceStructuresName": "",
+    "isEntryPointPath": "",
+    "isEntryPointName": "",
+    "treatFinalFieldsAsMandatory": false
+  },
+  "graphRestriction": {
+    "classPackageExcludeFilter": "",
+    "classPackageIncludeFilter": "",
+    "classNameExcludeFilter": "",
+    "classNameIncludeFilter": "",
+    "methodNameExcludeFilter": "",
+    "methodNameIncludeFilter": "",
+    "removeByInheritance": "", // inheritance/annotation based filtering is done in a second step
+    "removeByAnnotation": "",
+    "removeByClassPackage": "", // cleanup the graph after inheritance/annotation based filtering is done
+    "removeByClassName": "",
+    "cutMappings": false,
+    "cutEnum": false,
+    "cutTests": true,
+    "cutClient": false,
+    "cutDataAccess": false,
+    "cutInterfaceStructures": false,
+    "cutDataStructures": false,
+    "cutGetterAndSetter": false,
+    "cutConstructors": false
+  },
+  "graphTraversal": {
+    "forwardDepth": 5,
+    "backwardDepth": 5,
+    "classPackageExcludeFilter": "",
+    "classPackageIncludeFilter": "",
+    "classNameExcludeFilter": "",
+    "classNameIncludeFilter": "",
+    "methodNameExcludeFilter": "",
+    "methodNameIncludeFilter": "",
+    "hideMappings": false,
+    "hideDataStructures": false,
+    "hidePrivateMethods": false,
+    "hideInterfaceCalls": false, // indirection: implementation -> interface (is hidden) -> implementation
+    "onlyShowApplicationEntryPoints": false, // root node is included
+    "useMethodCallsForStructureDiagram": "BothDirections" // ForwardOnly, BothDirections, No
+  },
+  "details": {
+    "aggregation": "GroupByClass", // ByClass, GroupByClass, None
+    "showClassGenericTypes": true,
+    "showMethods": true,
+    "showMethodParameterNames": true,
+    "showMethodParameterTypes": true,
+    "showMethodReturnType": true,
+    "showPackageLevels": 5,
+    "showDetailedClassStructure": true
+  },
+  "rootClass": "gui.GUI",
+  "extensionCallbackMethod": "" // qualified.class.name#methodName - signature: public static String method(String)
+}
+diagram meta data end '/
+
+
+
+digraph g {
+    rankdir="TB"
+    splines=polyline
+    
+
+'nodes 
+subgraph cluster_102715 { 
+   	label=gui
+	labeljust=l
+	fillcolor="#ececec"
+	style=filled
+   
+   GUI102715[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)GUI</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   allInMemCkBx: JCheckBox [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   batchSizeSpinner: JSpinner [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   bf16Btn: JRadioButton [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   clearPreprocessOutDirBtn: JButton [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   clearSliceOutDirBtn: JButton [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   clearTrainLogDirBtn: JButton [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   connectItm: JMenuItem [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   consoleArea: JTextArea [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   consolePanel: JScrollPane [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   currentConnection: JMenu [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   currentVocalFileTransProgress: JProgressBar [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   currentVoiceFileTransProgress: JProgressBar [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   datasetPrepPanel: JPanel [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   disconnectItm: JMenuItem [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   evalIntervalSpinner: JSpinner [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   executionAgent: ExecutionAgent [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   f0PredictorInferCbBx: JComboBox&lt;String&gt; [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   f0PredictorPreproCbBx: JComboBox&lt;String&gt; [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   floatPrecisionGroup: ButtonGroup [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   fp16Btn: JRadioButton [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   fp32Btn: JRadioButton [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   gpuIdSpinnerInfer: JSpinner [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   gpuIdSpinnerTrain: JSpinner [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   gpuMonitorBtn: JButton [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   inferenceBtn: JButton [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   inferencePanel: JPanel [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   keepLastNModelSpinner: JSpinner [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   logIntervalSpinner: JSpinner [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   loudnessEmbedCkBx: JCheckBox [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   mainPanel: JPanel [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   menuBar: JMenuBar [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   nsfHiFiGanCkBx: JCheckBox [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   preprocessBtn: JButton [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   preprocessOutDirFld: JTextField [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   remoteMenu: JMenu [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   sliceOutDirFld: JTextField [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   speakerNameFld: JTextField [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   speakerPickCbBx: JComboBox&lt;String&gt; [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   speechEncoderCbBx: JComboBox&lt;String&gt; [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   startTrainingBtn: JButton [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   totalVocalFilesTransProgress: JProgressBar [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   totalVoiceFilesTransProgress: JProgressBar [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   trainLogDirFld: JTextField [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   trainingPanel: JPanel [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   vocalAudioFiles: File[] [0..*]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   vocalChooserBtn: JButton [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   vocalChosenFld: JTextField [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   voiceAudioFiles: File[] [0..*]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   voiceChosenFld: JTextField [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   voiceFileChooserBtn: JButton [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   voiceSlicerBtn: JButton [0..1]</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >+ GUI()</TD></TR>
+<TR><TD ALIGN="LEFT" >- buildTerminationErrorMessage(process: Process, executable: File): String</TD></TR>
+<TR><TD ALIGN="LEFT" >- commitAllInferConfigInput()</TD></TR>
+<TR><TD ALIGN="LEFT" >- commitAllTrainConfigInput()</TD></TR>
+<TR><TD ALIGN="LEFT" >- createConsoleArea()</TD></TR>
+<TR><TD ALIGN="LEFT" >- createDatasetPrepArea()</TD></TR>
+<TR><TD ALIGN="LEFT" >- createInferenceArea()</TD></TR>
+<TR><TD ALIGN="LEFT" >- createMenuBar()</TD></TR>
+<TR><TD ALIGN="LEFT" >- createPreprocessArea()</TD></TR>
+<TR><TD ALIGN="LEFT" >- createTrainingArea()</TD></TR>
+<TR><TD ALIGN="LEFT" >- createUIComponents()</TD></TR>
+<TR><TD ALIGN="LEFT" >- displaySpeakersName()</TD></TR>
+<TR><TD ALIGN="LEFT" >- generateHubertAndF0()</TD></TR>
+<TR><TD ALIGN="LEFT" >- getConfigJsonObject(): JSONObject</TD></TR>
+<TR><TD ALIGN="LEFT" >- getPrintStream(): PrintStream</TD></TR>
+<TR><TD ALIGN="LEFT" >- loadTrainingConfig()</TD></TR>
+<TR><TD ALIGN="LEFT" >- overwriteTrainingConfig(): JSONObject</TD></TR>
+<TR><TD ALIGN="LEFT" >- redirectSystemOutErrStream(out: PrintStream, err: PrintStream)</TD></TR>
+<TR><TD ALIGN="LEFT" >- removeDirectory(directory: File)</TD></TR>
+<TR><TD ALIGN="LEFT" >- resampleAudio()</TD></TR>
+<TR><TD ALIGN="LEFT" >- resetDisconnectedState()</TD></TR>
+<TR><TD ALIGN="LEFT" >- resetInferenceState()</TD></TR>
+<TR><TD ALIGN="LEFT" >- sendClearInstruction(type: InstructionType)</TD></TR>
+<TR><TD ALIGN="LEFT" >- splitDatasetAndGenerateConfig()</TD></TR>
+<TR><TD ALIGN="LEFT" >- startInference()</TD></TR>
+<TR><TD ALIGN="LEFT" >- startTraining()</TD></TR>
+<TR><TD ALIGN="LEFT" >- updateConsole(output: String)</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+
+MonitorForGPU102715[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)MonitorForGPU</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   autoRefresh: Thread [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   displayArea: JTextArea [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   monitorPanel: JPanel [0..1]</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" ># MonitorForGPU()</TD></TR>
+<TR><TD ALIGN="LEFT" >- registerAutoRefresh()</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+} 
+
+subgraph cluster_1068799382 { 
+   	label=models
+	labeljust=l
+	fillcolor="#ececec"
+	style=filled
+   
+   ExecutionAgent1068799382[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)ExecutionAgent</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   currentProcess: Process [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   taskQueue: Queue&lt;Runnable&gt; [0..*]</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >- ExecutionAgent()</TD></TR>
+<TR><TD ALIGN="LEFT" >+ cancelAllTasks()</TD></TR>
+<TR><TD ALIGN="LEFT" >- execute()</TD></TR>
+<TR><TD ALIGN="LEFT" >+ executeLater(command: List&lt;String&gt;, workDirectory: File, afterExecution: Consumer&lt;Process&gt;): boolean</TD></TR>
+<TR><TD ALIGN="LEFT" >+ executeLater(command: String[], workDirectory: File, afterExecution: Consumer&lt;Process&gt;): boolean</TD></TR>
+<TR><TD ALIGN="LEFT" >+ getExecutionAgent(): ExecutionAgent</TD></TR>
+<TR><TD ALIGN="LEFT" >+ invokeExecution()</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+
+RemoteAgent1068799382[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)RemoteAgent</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   probeSocket: Socket [0..1]</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >+ RemoteAgent(address: InetSocketAddress)</TD></TR>
+<TR><TD ALIGN="LEFT" >+ close()</TD></TR>
+<TR><TD ALIGN="LEFT" >+ executeInstructionOnServer(instruction: JSONObject)</TD></TR>
+<TR><TD ALIGN="LEFT" >+ getInetAddress(): InetAddress</TD></TR>
+<TR><TD ALIGN="LEFT" >+ getPort(): int</TD></TR>
+<TR><TD ALIGN="LEFT" >+ getResultFiles(resultDir: File)</TD></TR>
+<TR><TD ALIGN="LEFT" >+ getTrainConfig(): JSONObject</TD></TR>
+<TR><TD ALIGN="LEFT" >+ transferFileToServer(usage: FileUsage, file: File, progressBar: JProgressBar)</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+} 
+
+'edges    
+GUI102715 -> ExecutionAgent1068799382[label="executionAgent
+[0..1]"];
+GUI102715 -> MonitorForGPU102715[label="createTrainingArea() -> MonitorForGPU()"];
+MonitorForGPU102715 -> RemoteAgent1068799382[label="registerAutoRefresh() -> getInetAddress()"];
+    
+}
+@enduml
