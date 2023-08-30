@@ -19,7 +19,7 @@ public class RemoteAgent {
 
     private static final int FILE_TRANSFER_FRAGMENT_SIZE = 1024; // bytes
     private static final int FILE_TRANSFER_SERVER_PORT = 43688;
-    public static final int FILE_TRANSFER_INTERVAL = 500; // ms
+    public static final int FILE_TRANSFER_INTERVAL = 1000; // ms
 
     private final Socket probeSocket; // closed after probing
 

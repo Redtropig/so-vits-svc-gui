@@ -9,10 +9,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7fb02174-3f4b-4c79-8849-a38c17ff3a31" name="Changes" comment="UML Diagram Generated.">
+    <list default="true" id="7fb02174-3f4b-4c79-8849-a38c17ff3a31" name="Changes" comment="Change:&#10;1. GPU Monitor -&gt; remote port: 43687.&#10;2. File Sender(RemoteAgent) -&gt; remote port: 43688.&#10;3. File transfer JProgressBar bug fixed.&#10;4. FILE_TRANSFER_INTERVAL =&gt; 500 ms.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gui/src/gui/GUI.java" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/gui/GUI.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gui/src/gui/MonitorForGPU.java" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/gui/MonitorForGPU.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/gui/src/models/RemoteAgent.java" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/models/RemoteAgent.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -338,7 +336,15 @@
       <option name="project" value="LOCAL" />
       <updated>1693350574295</updated>
     </task>
-    <option name="localTasksCounter" value="25" />
+    <task id="LOCAL-00025" summary="Change:&#10;1. GPU Monitor -&gt; remote port: 43687.&#10;2. File Sender(RemoteAgent) -&gt; remote port: 43688.&#10;3. File transfer JProgressBar bug fixed.&#10;4. FILE_TRANSFER_INTERVAL =&gt; 500 ms.">
+      <option name="closed" value="true" />
+      <created>1693414214729</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1693414214729</updated>
+    </task>
+    <option name="localTasksCounter" value="26" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -375,7 +381,8 @@
     <MESSAGE value="New feature: Remote Preprocess." />
     <MESSAGE value="New feature: Remote Train." />
     <MESSAGE value="New feature: Remote Inference &amp; Results Retrieval.&#10;All Client design done." />
-    <option name="LAST_COMMIT_MESSAGE" value="New feature: Remote Inference &amp; Results Retrieval.&#10;All Client design done." />
+    <MESSAGE value="Change:&#10;1. GPU Monitor -&gt; remote port: 43687.&#10;2. File Sender(RemoteAgent) -&gt; remote port: 43688.&#10;3. File transfer JProgressBar bug fixed.&#10;4. FILE_TRANSFER_INTERVAL =&gt; 500 ms." />
+    <option name="LAST_COMMIT_MESSAGE" value="Change:&#10;1. GPU Monitor -&gt; remote port: 43687.&#10;2. File Sender(RemoteAgent) -&gt; remote port: 43688.&#10;3. File transfer JProgressBar bug fixed.&#10;4. FILE_TRANSFER_INTERVAL =&gt; 500 ms." />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
   <component name="XDebuggerManager">
