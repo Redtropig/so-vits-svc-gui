@@ -202,10 +202,10 @@ public class GUI extends JFrame {
             try {
                 ip_port = JOptionPane.showInputDialog(
                         this,
-                        "Connect to <IP:Port>:",
+                        "Connect to <IP,Port>:",
                         "Connect To...",
                         JOptionPane.QUESTION_MESSAGE
-                ).trim().split(":", 2);
+                ).trim().split(",", 2);
             } catch (NullPointerException ex) { // User canceled IP:Port input
                 return;
             }
@@ -218,7 +218,7 @@ public class GUI extends JFrame {
                 InetSocketAddress address;
                 try {
                     System.out.println("[INFO] Resolving Hostname...");
-                    address = new InetSocketAddress(ip_port[0], Integer.parseInt(ip_port[1]));
+                    address = new InetSocketAddress(ip_port[0], Integer.parseInt(ip_port[1].trim()));
                     if (address.isUnresolved()) {
                         System.err.println("[ERROR] Cannot Resolve Hostname: \"" + ip_port[0] + "\"");
                         return;
@@ -226,12 +226,12 @@ public class GUI extends JFrame {
                     System.out.println("[INFO] Connecting...");
                     remoteAgent = new RemoteAgent(address);
                     disconnectItm.setEnabled(true);
-                    currentConnection.setText("@" + remoteAgent.getInetAddress() + ":" + remoteAgent.getPort());
+                    currentConnection.setText("@[" + remoteAgent.getInetAddress() + "]:" + remoteAgent.getPort());
                     System.out.println("[INFO] Connection Established.");
                 } catch (ConnectException ex) {
                     System.err.println("[ERROR] " + ex.getMessage());
                 } catch (ArrayIndexOutOfBoundsException | IllegalArgumentException ex) { // Invalid input
-                    System.err.println("[!] <IP:Port> address invalid.");
+                    System.err.println("[!] <IP,Port> address invalid.");
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
                 } finally {
