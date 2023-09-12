@@ -218,7 +218,7 @@ public class GUI extends JFrame {
                 InetSocketAddress address;
                 try {
                     System.out.println("[INFO] Resolving Hostname...");
-                    address = new InetSocketAddress(ip_port[0], Integer.parseInt(ip_port[1].trim()));
+                    address = new InetSocketAddress(ip_port[0].trim(), Integer.parseInt(ip_port[1].trim()));
                     if (address.isUnresolved()) {
                         System.err.println("[ERROR] Cannot Resolve Hostname: \"" + ip_port[0] + "\"");
                         return;

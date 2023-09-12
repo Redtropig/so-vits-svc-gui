@@ -9,10 +9,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7fb02174-3f4b-4c79-8849-a38c17ff3a31" name="Changes" comment="Change:&#10;1. FILE_TRANSFER_INTERVAL =&gt; 1s.">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gui/src/gui/GUI.java" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/gui/GUI.java" afterDir="false" />
-    </list>
+    <list default="true" id="7fb02174-3f4b-4c79-8849-a38c17ff3a31" name="Changes" comment="IPv6 Supported." />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -352,7 +349,15 @@
       <option name="project" value="LOCAL" />
       <updated>1693422024554</updated>
     </task>
-    <option name="localTasksCounter" value="27" />
+    <task id="LOCAL-00027" summary="IPv6 Supported.">
+      <option name="closed" value="true" />
+      <created>1694417413541</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1694417413541</updated>
+    </task>
+    <option name="localTasksCounter" value="28" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -391,7 +396,8 @@
     <MESSAGE value="New feature: Remote Inference &amp; Results Retrieval.&#10;All Client design done." />
     <MESSAGE value="Change:&#10;1. GPU Monitor -&gt; remote port: 43687.&#10;2. File Sender(RemoteAgent) -&gt; remote port: 43688.&#10;3. File transfer JProgressBar bug fixed.&#10;4. FILE_TRANSFER_INTERVAL =&gt; 500 ms." />
     <MESSAGE value="Change:&#10;1. FILE_TRANSFER_INTERVAL =&gt; 1s." />
-    <option name="LAST_COMMIT_MESSAGE" value="Change:&#10;1. FILE_TRANSFER_INTERVAL =&gt; 1s." />
+    <MESSAGE value="IPv6 Supported." />
+    <option name="LAST_COMMIT_MESSAGE" value="IPv6 Supported." />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
   <component name="XDebuggerManager">
