@@ -9,7 +9,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7fb02174-3f4b-4c79-8849-a38c17ff3a31" name="Changes" comment="IPv6 Supported." />
+    <list default="true" id="7fb02174-3f4b-4c79-8849-a38c17ff3a31" name="Changes" comment="Minor bug fixes.">
+      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.name" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/src/gui/GUI.java" beforeDir="false" afterPath="$PROJECT_DIR$/gui/src/gui/GUI.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -69,7 +73,7 @@
     &quot;git-widget-placeholder&quot;: &quot;master&quot;,
     &quot;last_directory_selection&quot;: &quot;C:/Users/10130/Desktop/so-vits-svc-gui/gui/src/models&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/10130/Desktop/so-vits-svc-gui&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
     &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
     &quot;project.structure.side.proportion&quot;: &quot;0.25977013&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;settings.sync&quot;
@@ -357,7 +361,15 @@
       <option name="project" value="LOCAL" />
       <updated>1694417413541</updated>
     </task>
-    <option name="localTasksCounter" value="28" />
+    <task id="LOCAL-00028" summary="Minor bug fixes.">
+      <option name="closed" value="true" />
+      <created>1694500582236</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1694500582236</updated>
+    </task>
+    <option name="localTasksCounter" value="29" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -372,7 +384,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Preprocess Area Design Done." />
     <MESSAGE value="Repo Fixed." />
     <MESSAGE value="Training Area Design done." />
     <MESSAGE value="User-GUI interaction improved.&#10;Components now behave more reasonably when dealing with invalid user inputs." />
@@ -397,7 +408,8 @@
     <MESSAGE value="Change:&#10;1. GPU Monitor -&gt; remote port: 43687.&#10;2. File Sender(RemoteAgent) -&gt; remote port: 43688.&#10;3. File transfer JProgressBar bug fixed.&#10;4. FILE_TRANSFER_INTERVAL =&gt; 500 ms." />
     <MESSAGE value="Change:&#10;1. FILE_TRANSFER_INTERVAL =&gt; 1s." />
     <MESSAGE value="IPv6 Supported." />
-    <option name="LAST_COMMIT_MESSAGE" value="IPv6 Supported." />
+    <MESSAGE value="Minor bug fixes." />
+    <option name="LAST_COMMIT_MESSAGE" value="Minor bug fixes." />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
   <component name="XDebuggerManager">

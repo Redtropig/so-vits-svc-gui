@@ -233,7 +233,8 @@ public class GUI extends JFrame {
                 } catch (ArrayIndexOutOfBoundsException | IllegalArgumentException ex) { // Invalid input
                     System.err.println("[!] <IP,Port> address invalid.");
                 } catch (IOException ex) {
-                    throw new RuntimeException(ex);
+                    System.err.println("[ERROR] Unreachable to Network, Please Check Firewall Settings.");
+                    return;
                 } finally {
                     connectItm.setEnabled(true);
                 }
@@ -1197,6 +1198,7 @@ public class GUI extends JFrame {
             // Parse JSON String to JSONObject
             return new JSONObject(in.lines().reduce("", String::concat));
         } catch (IOException e) {
+            System.err.println("[ERROR] Failed to Load from Config File, Please Restart this Client as Admin.");
             throw new RuntimeException(e);
         }
     }
